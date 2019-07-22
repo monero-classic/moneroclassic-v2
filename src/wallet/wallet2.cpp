@@ -6996,6 +6996,7 @@ uint64_t wallet2::get_max_ring_size() const
 //------------------------------------------------------------------------------------------------------------------------------
 uint64_t wallet2::adjust_mixin(uint64_t mixin) const
 {
+/*
   const uint64_t min_ring_size = get_min_ring_size();
   if (mixin + 1 < min_ring_size)
   {
@@ -7008,6 +7009,21 @@ uint64_t wallet2::adjust_mixin(uint64_t mixin) const
     MWARNING("Requested ring size " << (mixin + 1) << " too high, using " << max_ring_size);
     mixin = max_ring_size-1;
   }
+*/
+
+  if (mixin < 7 && funding_enabled(2)) {
+    MWARNING("Requested ring size " << (mixin + 1) << " too low after funding_enabled, using 8");
+    mixin = 7;
+  }
+  else if (mixin < 4 && use_fork_rules(6, 10)) {
+    MWARNING("Requested ring size " << (mixin + 1) << " too low for hard fork 6, using 5");
+    mixin = 4;
+  }
+  else if (mixin < 2 && use_fork_rules(2, 10)) {
+    MWARNING("Requested ring size " << (mixin + 1) << " too low for hard fork 2, using 3");
+    mixin = 2;
+  }
+
   return mixin;
 }
 //----------------------------------------------------------------------------------------------------
@@ -10090,6 +10106,28 @@ void wallet2::get_hard_fork_info(uint8_t version, uint64_t &earliest_height) con
   boost::optional<std::string> result = m_node_rpc_proxy.get_earliest_height(version, earliest_height);
   throw_on_rpc_response_error(result, "get_hard_fork_info");
 }
+
+bool wallet2::funding_enabled(uint64_t early_blocks) const
+{
+  uint64_t height, funding_enabled_height;
+  boost::optional<std::string> result = m_node_rpc_proxy.get_height(height);
+  throw_on_rpc_response_error(result, "get_info");
+  result = m_node_rpc_proxy.get_funding_enabled_height(funding_enabled_height);
+  throw_on_rpc_response_error(result, "get_funding_enabled_height");
+
+  return height - early_blocks >= funding_enabled_height;
+
+}
+
+uint64_t wallet2::get_funding_enabled_height() const
+{
+  uint64_t funding_enabled_height;
+  boost::optional<std::string> result = m_node_rpc_proxy.get_funding_enabled_height(funding_enabled_height);
+  throw_on_rpc_response_error(result, "get_funding_enabled_height");
+
+  return funding_enabled_height;
+}
+
 //----------------------------------------------------------------------------------------------------
 bool wallet2::use_fork_rules(uint8_t version, int64_t early_blocks) const
 {
@@ -10227,13 +10265,17 @@ const wallet2::transfer_details &wallet2::get_transfer_details(size_t idx) const
 std::vector<size_t> wallet2::select_available_unmixable_outputs()
 {
   // request all outputs with less instances than the min ring size
-  return select_available_outputs_from_histogram(get_min_ring_size(), false, true, false);
+//  return select_available_outputs_from_histogram(get_min_ring_size(), false, true, false);
+  const size_t min_mixin = funding_enabled(2) ? 7 : use_fork_rules(6, 10) ? 4 : 2; // v6 increases min mixin from 2 to 4, v7 to 6
+  return select_available_outputs_from_histogram(min_mixin + 1, false, true, false);
 }
 //----------------------------------------------------------------------------------------------------
 std::vector<size_t> wallet2::select_available_mixable_outputs()
 {
   // request all outputs with at least as many instances as the min ring size
-  return select_available_outputs_from_histogram(get_min_ring_size(), true, true, true);
+//  return select_available_outputs_from_histogram(get_min_ring_size(), true, true, true);
+ const size_t min_mixin = funding_enabled(2) ? 7 : use_fork_rules(6, 10) ? 4 : 2; // v6 increases min mixin from 2 to 4, v7 to 6
+  return select_available_outputs_from_histogram(min_mixin + 1, true, true, true);
 }
 //----------------------------------------------------------------------------------------------------
 std::vector<wallet2::pending_tx> wallet2::create_unmixable_sweep_transactions()

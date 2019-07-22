@@ -432,6 +432,23 @@ namespace wallet_rpc
       typedef epee::misc_utils::struct_init<response_t> response;
     };
 
+    struct COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT
+    {
+      struct request
+      {
+        BEGIN_KV_SERIALIZE_MAP()
+        END_KV_SERIALIZE_MAP()
+      };
+
+      struct response
+      {
+         uint64_t  funding_enabled_height;
+         BEGIN_KV_SERIALIZE_MAP()
+           KV_SERIALIZE(funding_enabled_height)
+         END_KV_SERIALIZE_MAP()
+      };
+    };
+
   struct transfer_destination
   {
     uint64_t amount;

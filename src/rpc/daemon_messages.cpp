@@ -36,6 +36,7 @@ namespace rpc
 {
 
 const char* const GetHeight::name = "get_height";
+const char* const GetFundingEnabledHeight::name = "get_funding_enabled_height";
 const char* const GetBlocksFast::name = "get_blocks_fast";
 const char* const GetHashesFast::name = "get_hashes_fast";
 const char* const GetTransactions::name = "get_transactions";
@@ -89,6 +90,31 @@ rapidjson::Value GetHeight::Response::toJson(rapidjson::Document& doc) const
 void GetHeight::Response::fromJson(rapidjson::Value& val)
 {
   GET_FROM_JSON_OBJECT(val, height, height);
+}
+
+
+rapidjson::Value GetFundingEnabledHeight::Request::toJson(rapidjson::Document& doc) const
+{
+  return Message::toJson(doc);
+}
+
+void GetFundingEnabledHeight::Request::fromJson(rapidjson::Value& val)
+{
+
+}
+
+rapidjson::Value GetFundingEnabledHeight::Response::toJson(rapidjson::Document& doc) const
+{
+  auto val = Message::toJson(doc);
+  auto& al = doc.GetAllocator();
+  val.AddMember("funding_enabled_height", funding_enabled_height, al);
+
+  return val;
+}
+
+void GetFundingEnabledHeight::Response::fromJson(rapidjson::Value& val)
+{
+  GET_FROM_JSON_OBJECT(val, funding_enabled_height, funding_enabled_height);
 }
 
 

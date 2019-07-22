@@ -178,6 +178,19 @@ namespace cryptonote
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
+
+  bool core_rpc_server::on_get_funding_enabled_height(const COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT::request& req, COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT::response& res, const connection_context *ctx)
+  {
+    PERF_TIMER(on_get_funding_enabled_height);
+    bool r;
+    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT>(invoke_http_mode::JON, "/get_funding_enabled_height", req, res, r))
+      return r;
+
+    res.funding_enabled_height = m_core.get_funding_enabled_height();
+    res.status = CORE_RPC_STATUS_OK;
+    return true;
+  }
+
   //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RPC_GET_INFO::response& res, const connection_context *ctx)
   {

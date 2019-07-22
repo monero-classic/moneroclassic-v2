@@ -114,6 +114,28 @@ namespace cryptonote
     typedef epee::misc_utils::struct_init<response_t> response;
   };
 
+  struct COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT
+  {
+      struct request
+      {
+          BEGIN_KV_SERIALIZE_MAP()
+          END_KV_SERIALIZE_MAP()
+      };
+
+      struct response
+      {
+          uint64_t funding_enabled_height;
+          std::string status;
+          bool untrusted;
+
+          BEGIN_KV_SERIALIZE_MAP()
+            KV_SERIALIZE(funding_enabled_height)
+            KV_SERIALIZE(status)
+            KV_SERIALIZE(untrusted)
+          END_KV_SERIALIZE_MAP()
+      };
+  };
+
   struct COMMAND_RPC_GET_BLOCKS_FAST
   {
 

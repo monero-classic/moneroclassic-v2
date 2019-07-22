@@ -718,6 +718,22 @@ namespace tools
     }
     return true;
   }
+
+  bool wallet_rpc_server::on_get_funding_enabled_height(const wallet_rpc::COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT::request& req, wallet_rpc::COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT::response& res, epee::json_rpc::error& er, const connection_context *ctx)
+  {
+    if (!m_wallet) return not_open(er);
+    try
+    {
+        res.funding_enabled_height = m_wallet->get_blockchain_current_height();
+    }
+    catch (const std::exception& e)
+    {
+        handle_rpc_exception(std::current_exception(), er, WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR);
+        return false;
+    }
+    return true;
+  }
+
   //------------------------------------------------------------------------------------------------------------------------------
   bool wallet_rpc_server::validate_transfer(const std::list<wallet_rpc::transfer_destination>& destinations, const std::string& payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, bool at_least_one_destination, epee::json_rpc::error& er)
   {

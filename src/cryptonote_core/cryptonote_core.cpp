@@ -52,6 +52,7 @@ using namespace epee;
 #include "ringct/rctSigs.h"
 #include "common/notify.h"
 #include "version.h"
+#include "blockfunding.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
@@ -380,6 +381,14 @@ namespace cryptonote
   {
     return m_blockchain_storage.get_current_blockchain_height();
   }
+
+  uint64_t core::get_funding_enabled_height() const
+  {
+    cryptonote::BlockFunding fundctl;
+    CHECK_AND_ASSERT_MES(fundctl.init(m_nettype), false, "init fundctl failed");
+    return fundctl.get_funding_enabled_height();
+  }
+
   //-----------------------------------------------------------------------------------------------
   void core::get_blockchain_top(uint64_t& height, crypto::hash& top_id) const
   {

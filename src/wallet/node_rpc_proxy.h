@@ -46,6 +46,7 @@ public:
 
   boost::optional<std::string> get_rpc_version(uint32_t &version) const;
   boost::optional<std::string> get_height(uint64_t &height) const;
+  boost::optional<std::string> get_funding_enabled_height(uint64_t &funding_enabled_height) const;
   void set_height(uint64_t h);
   boost::optional<std::string> get_target_height(uint64_t &height) const;
   boost::optional<std::string> get_block_weight_limit(uint64_t &block_weight_limit) const;
