@@ -417,8 +417,9 @@ bool Blockchain::init(BlockchainDB* db, const network_type nettype, bool offline
     for (size_t n = 0; n < sizeof(mainnet_hard_forks) / sizeof(mainnet_hard_forks[0]); ++n)
       m_hardfork->add_fork(mainnet_hard_forks[n].version, mainnet_hard_forks[n].height, mainnet_hard_forks[n].threshold, mainnet_hard_forks[n].time);
   }
-  m_hardfork->init();
 
+  CHECK_AND_ASSERT_MES(m_fundctl.init(m_nettype), false, "init fundctl failed");
+  m_hardfork->init();
   m_db->set_hard_fork(m_hardfork);
 
   // if the blockchain is new, add the genesis block
@@ -1247,13 +1248,15 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
   uint64_t funding_amount = 0;
   uint64_t miner_reward_amount = 0;
-  cryptonote::BlockFunding fundctl;
-  CHECK_AND_ASSERT_MES(fundctl.init(m_nettype), false, "init fundctl failed");
-  if (fundctl.funding_enabled(height))
+//  cryptonote::BlockFunding fundctl;
+//  CHECK_AND_ASSERT_MES(fundctl.init(m_nettype), false, "init fundctl failed");
+//  if (fundctl.funding_enabled(height))
+  if (m_fundctl.funding_enabled(height))
   {
 		//funding, added by zorroii, 2018-5-10
 		//no funding for genesis block
-    bool ret = fundctl.get_funding_from_miner_tx(b.miner_tx, funding_amount);
+//    bool ret = fundctl.get_funding_from_miner_tx(b.miner_tx, funding_amount);
+    bool ret = m_fundctl.get_funding_from_miner_tx(b.miner_tx, funding_amount);
     CHECK_AND_ASSERT_MES(ret, false, "validate funding failed");
     miner_reward_amount = money_in_use - funding_amount;
   }
@@ -1291,9 +1294,10 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   }
 
   // check funding
-  if (fundctl.funding_enabled(height))
+  if (m_fundctl.funding_enabled(height))
   {
-    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
+//    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
+    bool ret = m_fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
     MERROR_VER("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
     CHECK_AND_ASSERT_MES(ret, false, "check reward failed");
   }
@@ -2835,6 +2839,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
   crypto::hash tx_prefix_hash = get_transaction_prefix_hash(tx);
 
+  const uint64_t height = get_current_blockchain_height();
   const uint8_t hf_version = m_hardfork->get_current_version();
 
   // from hard fork 2, we require mixin at least 2 unless one output cannot mix with 2 others
@@ -2843,7 +2848,10 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
   {
     size_t n_unmixable = 0, n_mixable = 0;
     size_t mixin = std::numeric_limits<size_t>::max();
-    const size_t min_mixin = hf_version >= HF_VERSION_MIN_MIXIN_10 ? 10 : hf_version >= HF_VERSION_MIN_MIXIN_6 ? 6 : hf_version >= HF_VERSION_MIN_MIXIN_4 ? 4 : 2;
+//    const size_t min_mixin = hf_version >= HF_VERSION_MIN_MIXIN_10 ? 10 : hf_version >= HF_VERSION_MIN_MIXIN_6 ? 6 : hf_version >= HF_VERSION_MIN_MIXIN_4 ? 4 : 2;
+    //meanwhile, modify minxin from 4 to 7, for safety reason
+    const size_t min_mixin = m_fundctl.funding_enabled(height) ? 7 : hf_version >= HF_VERSION_MIN_MIXIN_4 ? 4 : 2;
+
     for (const auto& txin : tx.vin)
     {
       // non txin_to_key inputs will be rejected below

@@ -1048,6 +1048,8 @@ namespace cryptonote
     std::vector<crypto::hash> m_blocks_hash_check;
     std::vector<crypto::hash> m_blocks_txs_check;
 
+    BlockFunding m_fundctl;
+
     blockchain_db_sync_mode m_db_sync_mode;
     bool m_fast_sync;
     bool m_show_time_stats;
