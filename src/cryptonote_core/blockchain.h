@@ -57,6 +57,7 @@
 #include "checkpoints/checkpoints.h"
 #include "cryptonote_basic/hardfork.h"
 #include "blockchain_db/blockchain_db.h"
+#include "blockfunding.h"
 
 namespace tools { class Notify; }
 

@@ -182,6 +182,9 @@ namespace config
   std::string const GENESIS_TX = "013c01ff0001ffffffffffff03029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017767aafcde9be00dcfd098715ebcf7f410daebc582fda69d24a28e9d0bc890d1";
   uint32_t const GENESIS_NONCE = 10000;
 
+  std::string const MONERO_FUNDING_ADDR = "49txnugHRoGJpMweuBFmm6J77CNKXShKJ2g59YvxqyF97rmLvFCYf7NVnbwcJ9hX1oAVjpzt4FigVGyoAzizzA7h1A18VFY";
+  std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "6b389c48599b4d4fc24c8f1fe15435c93237d1c7b718b74cea246b9a1f3b2f0f";
+
   namespace testnet
   {
     uint64_t const CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 53;
@@ -195,6 +198,9 @@ namespace config
       } }; // Bender's daydream
     std::string const GENESIS_TX = "013c01ff0001ffffffffffff03029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017767aafcde9be00dcfd098715ebcf7f410daebc582fda69d24a28e9d0bc890d1";
     uint32_t const GENESIS_NONCE = 10001;
+
+    std::string const MONERO_FUNDING_ADDR = "9uqsvEXs8sA6keUVs1SPmSYRWRo45UmK3SZbgduYenZW9KSFmXbL317RupJp3VRuKgCvMV3NEu8NqMjGnN4TSVezR5vovpi";
+    std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "c29e31f94275da3f0555c96535f7fe53d18957a580c914e9555c2f2067c27d00";
   }
 
   namespace stagenet
@@ -210,6 +216,9 @@ namespace config
       } }; // Bender's daydream
     std::string const GENESIS_TX = "013c01ff0001ffffffffffff0302df5d56da0c7d643ddd1ce61901c7bdc5fb1738bfe39fbe69c28a3a7032729c0f2101168d0c4ca86fb55a4cf6a36d31431be1c53a3bd7411bb24e8832410289fa6f3b";
     uint32_t const GENESIS_NONCE = 10002;
+
+    std::string const MONERO_FUNDING_ADDR = "9uqsvEXs8sA6keUVs1SPmSYRWRo45UmK3SZbgduYenZW9KSFmXbL317RupJp3VRuKgCvMV3NEu8NqMjGnN4TSVezR5vovpi";
+    std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "c29e31f94275da3f0555c96535f7fe53d18957a580c914e9555c2f2067c27d00";
   }
 }
 
