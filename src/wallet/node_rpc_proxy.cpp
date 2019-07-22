@@ -86,6 +86,7 @@ boost::optional<std::string> NodeRPCProxy::get_funding_enabled_height(uint64_t &
   cryptonote::COMMAND_RPC_GET_FUNDING_ENABLED_HEIGHT::response res = AUTO_VAL_INIT(res);
   m_daemon_rpc_mutex.lock();
   bool r = net_utils::invoke_http_json("/get_funding_enabled_height", req, res, m_http_client, rpc_timeout);
+  m_daemon_rpc_mutex.unlock();
   CHECK_AND_ASSERT_MES(r, std::string(), "Failed to connect to daemon");
   CHECK_AND_ASSERT_MES(res.status != CORE_RPC_STATUS_BUSY, res.status, "Failed to connect to daemon");
   funding_enabled_height = res.funding_enabled_height;
