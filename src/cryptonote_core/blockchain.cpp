@@ -125,7 +125,6 @@ static const struct {
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 1009826;
 
-/*
 static const struct {
   uint8_t version;
   uint64_t height;
@@ -151,27 +150,6 @@ static const struct {
 //  { 11, 1155038, 0, 1550225678 },
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
-*/
-static const struct {
-  uint8_t version;
-  uint64_t height;
-  uint8_t threshold;
-  time_t time;
-} testnet_hard_forks[] = {
-  // version 1 from the start of the blockchain
-  { 1, 1, 0, 1341378000 },
-
-  // version 2 starts from block 624634, which is on or around the 23rd of November, 2015. Fork time finalised on 2015-11-20. No fork voting occurs for the v2 fork.
-  { 2, 10, 0, 1445355000 },
-
-  // versions 3-5 were passed in rapid succession from September 18th, 2016
-  { 3, 11, 0, 1472415034 },
-  { 4, 12, 0, 1472415035 },
-  { 5, 13, 0, 1472415036 + 86400*180 }, // add 5 months on testnet to shut the update warning up since there's a large gap to v6
-
-  { 6, 14, 0, 1501709789 },
-};
-static const uint64_t testnet_hard_fork_version_1_till = 10;
 
 static const struct {
   uint8_t version;
