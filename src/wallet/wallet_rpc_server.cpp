@@ -709,8 +709,7 @@ namespace tools
     if (!m_wallet) return not_open(er);
     try
     {
-//      res.height = m_wallet->get_blockchain_current_height();
-      res.funding_enabled_height = m_wallet->get_funding_enabled_height();
+      res.height = m_wallet->get_blockchain_current_height();
     }
     catch (const std::exception& e)
     {
@@ -725,7 +724,8 @@ namespace tools
     if (!m_wallet) return not_open(er);
     try
     {
-        res.funding_enabled_height = m_wallet->get_blockchain_current_height();
+ //       res.funding_enabled_height = m_wallet->get_blockchain_current_height();
+        res.funding_enabled_height = m_wallet->get_funding_enabled_height();
     }
     catch (const std::exception& e)
     {
