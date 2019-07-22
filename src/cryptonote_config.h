@@ -182,8 +182,8 @@ namespace config
   std::string const GENESIS_TX = "013c01ff0001ffffffffffff03029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017767aafcde9be00dcfd098715ebcf7f410daebc582fda69d24a28e9d0bc890d1";
   uint32_t const GENESIS_NONCE = 10000;
 
-  std::string const MONERO_FUNDING_ADDR = "49txnugHRoGJpMweuBFmm6J77CNKXShKJ2g59YvxqyF97rmLvFCYf7NVnbwcJ9hX1oAVjpzt4FigVGyoAzizzA7h1A18VFY";
-  std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "6b389c48599b4d4fc24c8f1fe15435c93237d1c7b718b74cea246b9a1f3b2f0f";
+  std::string const MONERO_FUNDING_ADDR = "48k86QTccWtEnBraEdZDj81r6vbJQj5xuLrzz1e7QLEdZcjTkYdFfKAf2DXTopec3vckbzPtK3gwNJgAgay8tzDkMAvxLyy";
+  std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "ffadbd668cd005e34fffb890ed988dd5bef541bd32671d69ac756cdae8470fb2";
 
   namespace testnet
   {
