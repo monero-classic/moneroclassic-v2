@@ -183,7 +183,7 @@ namespace config
   uint32_t const GENESIS_NONCE = 10000;
 
   std::string const MONERO_FUNDING_ADDR = "48k86QTccWtEnBraEdZDj81r6vbJQj5xuLrzz1e7QLEdZcjTkYdFfKAf2DXTopec3vckbzPtK3gwNJgAgay8tzDkMAvxLyy";
-  std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "ffadbd668cd005e34fffb890ed988dd5bef541bd32671d69ac756cdae8470fb2";
+  std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "eabcc3ffbc9762e116b25768c915fd9c05ca40fb00f3eb2cdd5b73fa96057807";
 
   namespace testnet
   {
