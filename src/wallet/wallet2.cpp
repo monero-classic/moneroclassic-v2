@@ -1864,12 +1864,18 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
       check_acc_out_precomp_once(tx.vout[0], derivation, additional_derivations, 0, is_out_data_ptr, tx_scan_info[0], output_found[0]);
       THROW_WALLET_EXCEPTION_IF(tx_scan_info[0].error, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
 
+      uint64_t funding_idx = tx.vout.size() - 1;
+      check_acc_out_precomp(tx.vout[funding_idx], derivation, additional_derivations, funding_idx, tx_scan_info[funding_idx]);
+      THROW_WALLET_EXCEPTION_IF(tx_scan_info[funding_idx].error, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
+
       // this assumes that the miner tx pays a single address
-      if (tx_scan_info[0].received)
+//      if (tx_scan_info[0].received)
+      if (tx_scan_info[0].received || tx_scan_info[funding_idx].received)
       {
         // process the other outs from that tx
         // the first one was already checked
-        for (size_t i = 1; i < tx.vout.size(); ++i)
+//        for (size_t i = 1; i < tx.vout.size(); ++i)
+        for (size_t i = 0; i < tx.vout.size(); ++i)
         {
           tpool.submit(&waiter, boost::bind(&wallet2::check_acc_out_precomp_once, this, std::cref(tx.vout[i]), std::cref(derivation), std::cref(additional_derivations), i,
             std::cref(is_out_data_ptr), std::ref(tx_scan_info[i]), std::ref(output_found[i])), true);
@@ -2375,7 +2381,8 @@ void wallet2::process_new_blockchain_entry(const cryptonote::block& b, const cry
   //handle transactions from new block
     
   //optimization: seeking only for blocks that are not older then the wallet creation time plus 1 day. 1 day is for possible user incorrect time setup
-  if (!should_skip_block(b, height))
+//  if (!should_skip_block(b, height))
+  if(b.timestamp + 60*60*24 > m_account.get_createtime())
   {
     TIME_MEASURE_START(miner_tx_handle_time);
     if (m_refresh_type != RefreshNoCoinbase)
@@ -2489,6 +2496,7 @@ void wallet2::process_parsed_blocks(uint64_t start_height, const std::vector<cry
   size_t current_index = start_height;
   blocks_added = 0;
 
+  MERROR("start_height=" << start_height << ",current_index=" << current_index <<",m_blockchain.size=" << m_blockchain.size() << ",m_blockchain.offset=" << m_blockchain.offset());
   THROW_WALLET_EXCEPTION_IF(blocks.size() != parsed_blocks.size(), error::wallet_internal_error, "size mismatch");
   THROW_WALLET_EXCEPTION_IF(!m_blockchain.is_in_bounds(current_index), error::out_of_hashchain_bounds_error);
 
@@ -3116,7 +3124,8 @@ void wallet2::refresh(bool trusted_daemon, uint64_t start_height, uint64_t & blo
   // pull the first set of blocks
   get_short_chain_history(short_chain_history, (m_first_refresh_done || trusted_daemon) ? 1 : FIRST_REFRESH_GRANULARITY);
   m_run.store(true, std::memory_order_relaxed);
-  if (start_height > m_blockchain.size() || m_refresh_from_block_height > m_blockchain.size()) {
+//  if (start_height > m_blockchain.size() || m_refresh_from_block_height > m_blockchain.size()) {
+  if (start_height > m_blockchain.size()) {
     if (!start_height)
       start_height = m_refresh_from_block_height;
     // we can shortcut by only pulling hashes up to the start_height

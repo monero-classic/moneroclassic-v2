@@ -55,6 +55,7 @@
 #include "common/notify.h"
 #include "common/varint.h"
 #include "common/pruning.h"
+#include "blockfunding.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "blockchain"
@@ -1238,6 +1239,20 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     }
   }
 
+  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
+  uint64_t funding_amount = 0;
+  uint64_t miner_reward_amount = 0;
+  cryptonote::BlockFunding fundctl;
+  CHECK_AND_ASSERT_MES(fundctl.init(m_nettype), false, "init fundctl failed");
+  if (fundctl.funding_enabled(height))
+  {
+		//funding, added by zorroii, 2018-5-10
+		//no funding for genesis block
+    bool ret = fundctl.get_funding_from_miner_tx(b.miner_tx, funding_amount);
+    CHECK_AND_ASSERT_MES(ret, false, "validate funding failed");
+    miner_reward_amount = money_in_use - funding_amount;
+  }
+
   std::vector<uint64_t> last_blocks_weights;
   get_last_n_blocks_weights(last_blocks_weights, CRYPTONOTE_REWARD_BLOCKS_WINDOW);
   if (!get_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, base_reward, version))
@@ -1268,6 +1283,14 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     if(base_reward + fee != money_in_use)
       partial_block_reward = true;
     base_reward = money_in_use - fee;
+  }
+
+  // check funding
+  if (fundctl.funding_enabled(height))
+  {
+    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
+    MERROR_VER("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
+    CHECK_AND_ASSERT_MES(ret, false, "check reward failed");
   }
   return true;
 }
@@ -1530,7 +1553,8 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob weight
   uint8_t hf_version = b.major_version;
   size_t max_outs = hf_version >= 4 ? 1 : 11;
-  bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version);
+//  bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version);
+  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype);
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_weight = txs_weight + get_transaction_weight(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1539,7 +1563,8 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_weight, already_generated_coins, cumulative_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version);
+//    r = construct_miner_tx(height, median_weight, already_generated_coins, cumulative_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version);
+    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype);
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_weight = get_transaction_weight(b.miner_tx);
