@@ -107,6 +107,9 @@ static const struct {
 
   // version 6 starts from block 1400000, which is on or around the 16th of September, 2017. Fork time finalised on 2017-08-18.
   { 6, 1400000, 0, 1503046577 },
+
+  // version 0xa7 starts from block 1881040 , timestamp after block 1876000 + 1week
+  { 0xa7, 1881040, 0, 1561887557 + 7 * 24 * 60 * 60 },
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 1009826;
 
@@ -128,6 +131,9 @@ static const struct {
   { 5, 802660, 0, 1472415036 + 86400*180 }, // add 5 months on testnet to shut the update warning up since there's a large gap to v6
 
   { 6, 971400, 0, 1501709789 },
+
+  // version 0xa7 starts from block 1881040 , timestamp after block 1876000 + 1week
+  { 0xa7, 1881040, 0, 1561887557 + 7*24*60*60 },
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
 
@@ -3718,12 +3724,14 @@ leave:
       proof_of_work = get_block_longhash(bl, blockchain_height);
 
     // validate proof_of_work versus difficulty target
+/*
     if(!check_hash(proof_of_work, current_diffic))
     {
       MERROR_VER("Block with id: " << id << std::endl << "does not have enough proof of work: " << proof_of_work << " at height " << blockchain_height << ", unexpected difficulty: " << current_diffic);
       bvc.m_verifivation_failed = true;
       goto leave;
     }
+*/
   }
 
   // If we're at a checkpoint, ensure that our hardcoded checkpoint hash
