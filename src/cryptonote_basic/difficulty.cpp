@@ -200,31 +200,49 @@ namespace cryptonote {
       return check_hash_128(hash, difficulty);
   }
 
-  difficulty_type next_difficulty(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds) {
+  difficulty_type next_difficulty(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds, uint64_t height) {
     //cutoff DIFFICULTY_LAG
-    if(timestamps.size() > DIFFICULTY_WINDOW)
-    {
-      timestamps.resize(DIFFICULTY_WINDOW);
-      cumulative_difficulties.resize(DIFFICULTY_WINDOW);
+    size_t difficulty_window = 0;
+    size_t difficulty_cut = 0;
+    if (height >= static_cast<size_t>(DIFFICULTY_ADJUST_HEIGHT)) {
+        difficulty_window = static_cast<size_t>(DIFFICULTY_WINDOW_ADJUST);
+        difficulty_cut = static_cast<size_t>(DIFFICULTY_CUT_ADJUST);
     }
-
+    else {
+        difficulty_window = static_cast<size_t>(DIFFICULTY_WINDOW);
+        difficulty_cut = static_cast<size_t>(DIFFICULTY_CUT);
+    }
+//    if(timestamps.size() > DIFFICULTY_WINDOW)
+    if (timestamps.size() > difficulty_window) 
+    {
+//      timestamps.resize(DIFFICULTY_WINDOW);
+//      cumulative_difficulties.resize(DIFFICULTY_WINDOW);
+        timestamps.resize(difficulty_window);
+        cumulative_difficulties.resize(difficulty_window);
+    }
 
     size_t length = timestamps.size();
     assert(length == cumulative_difficulties.size());
     if (length <= 1) {
       return 1;
     }
-    static_assert(DIFFICULTY_WINDOW >= 2, "Window is too small");
-    assert(length <= DIFFICULTY_WINDOW);
+//    static_assert(DIFFICULTY_WINDOW >= 2, "Window is too small");
+//    assert(length <= DIFFICULTY_WINDOW);
+    assert(difficulty_window >= 2);
+    assert(length <= difficulty_window);
     sort(timestamps.begin(), timestamps.end());
     size_t cut_begin, cut_end;
-    static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Cut length is too large");
-    if (length <= DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT) {
+//    static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Cut length is too large");
+//    if (length <= DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT) {
+    assert(2 * difficulty_cut <= difficulty_window - 2);
+    if (length <= difficulty_window - 2 * difficulty_cut) {
       cut_begin = 0;
       cut_end = length;
     } else {
-      cut_begin = (length - (DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT) + 1) / 2;
-      cut_end = cut_begin + (DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT);
+//      cut_begin = (length - (DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT) + 1) / 2;
+//      cut_end = cut_begin + (DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT);
+      cut_begin = (length - (difficulty_window - 2 * difficulty_cut) + 1) / 2;
+      cut_end = cut_begin + (difficulty_window - 2 * difficulty_cut);
     }
     assert(/*cut_begin >= 0 &&*/ cut_begin + 2 <= cut_end && cut_end <= length);
     uint64_t time_span = timestamps[cut_end - 1] - timestamps[cut_begin];
@@ -238,6 +256,63 @@ namespace cryptonote {
       return 0; // to behave like previous implementation, may be better return max128bit?
     return res.convert_to<difficulty_type>();
   }
+
+// LWMA-1 difficulty algorithm 
+// Copyright (c) 2017-2018 Zawy, MIT License
+// See commented link below for required config file changes. Fix FTL and MTP.
+// https://github.com/zawy12/difficulty-algorithms/issues/3
+// The following comments can be deleted.
+// Bitcoin clones must lower their FTL. See Bitcoin/Zcash code on the page above.
+// Cryptonote et al coins must make the following changes:
+// BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW  = 11; // aka "MTP"
+// DIFFICULTY_WINDOW  = 60; //  N=60, 90, and 150 for T=600, 120, 60.
+// BLOCK_FUTURE_TIME_LIMIT = DIFFICULTY_WINDOW * DIFFICULTY_TARGET / 20;
+// Warning Bytecoin/Karbo clones may not have the following, so check TS & CD vectors size=N+1
+// DIFFICULTY_BLOCKS_COUNT = DIFFICULTY_WINDOW+1;
+// The BLOCKS_COUNT is to make timestamps & cumulative_difficulty vectors size N+1
+
+difficulty_type LWMA1_(std::vector<uint64_t> timestamps, 
+   std::vector<difficulty_type> cumulative_difficulties, uint64_t T, uint64_t N, uint64_t height,  
+					uint64_t FORK_HEIGHT, uint64_t  difficulty_guess) {   
+   // This old way was not very proper
+   // uint64_t  T = DIFFICULTY_TARGET;
+   // uint64_t  N = DIFFICULTY_WINDOW; // N=60, 90, and 150 for T=600, 120, 60.
+
+   // Genesis should be the only time sizes are < N+1.
+   assert(timestamps.size() == cumulative_difficulties.size() && timestamps.size() <= N+1 );
+
+   // Hard code D if there are not at least N+1 BLOCKS after fork (or genesis)
+   // This helps a lot in preventing a very common problem in CN forks from conflicting difficulties.
+   if (height >= FORK_HEIGHT && height < FORK_HEIGHT + N) { return difficulty_guess; }
+   assert(timestamps.size() == N+1); 
+
+   uint64_t  L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
+
+	previous_timestamp = timestamps[0]-T;
+	for ( i = 1; i <= N; i++) {        
+		// Safely prevent out-of-sequence timestamps
+		if ( timestamps[i]  > previous_timestamp ) {   this_timestamp = timestamps[i];  } 
+		else {  this_timestamp = previous_timestamp+1;   }
+		L +=  i*std::min(6*T ,this_timestamp - previous_timestamp);
+		previous_timestamp = this_timestamp; 
+	}
+	if (L < N*N*T/20 ) { L =  N*N*T/20; }
+	avg_D = (uint64_t)(( cumulative_difficulties[N] - cumulative_difficulties[0] )/ N);
+
+	// Prevent round off error for small D and overflow for large D.
+	if (avg_D > 2000000*N*N*T) { 
+		next_D = (avg_D/(200*L))*(N*(N+1)*T*99);   
+	}   
+	else {    next_D = (avg_D*N*(N+1)*T*99)/(200*L);    }
+
+	// Optional. Make all insignificant digits zero for easy reading.
+	i = 1000000000;
+	while (i > 1) { 
+		if ( next_D > i*100 ) { next_D = ((next_D+i/2)/i)*i; break; }
+		else { i /= 10; }
+	}
+	return  next_D;
+}
 
   std::string hex(difficulty_type v)
   {

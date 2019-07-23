@@ -65,7 +65,7 @@ static int test_wide_difficulty(const char *filename)
         }
         cryptonote::difficulty_type res = cryptonote::next_difficulty(
             std::vector<uint64_t>(timestamps.begin() + begin, timestamps.begin() + end),
-            std::vector<cryptonote::difficulty_type>(cumulative_difficulties.begin() + begin, cumulative_difficulties.begin() + end), DEFAULT_TEST_DIFFICULTY_TARGET);
+            std::vector<cryptonote::difficulty_type>(cumulative_difficulties.begin() + begin, cumulative_difficulties.begin() + end), DEFAULT_TEST_DIFFICULTY_TARGET, 1888000);
         if (res != difficulty) {
             cerr << "Wrong wide difficulty for block " << n << endl
                 << "Expected: " << difficulty << endl
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
         }
         cryptonote::difficulty_type wide_res = cryptonote::next_difficulty(
             std::vector<uint64_t>(timestamps.begin() + begin, timestamps.begin() + end),
-            std::vector<cryptonote::difficulty_type>(wide_cumulative_difficulties.begin() + begin, wide_cumulative_difficulties.begin() + end), DEFAULT_TEST_DIFFICULTY_TARGET);
+            std::vector<cryptonote::difficulty_type>(wide_cumulative_difficulties.begin() + begin, wide_cumulative_difficulties.begin() + end), DEFAULT_TEST_DIFFICULTY_TARGET, 1888000);
         if ((wide_res & 0xffffffffffffffff).convert_to<uint64_t>() != res) {
             cerr << "Wrong wide difficulty for block " << n << endl
                 << "Expected: " << res << endl
