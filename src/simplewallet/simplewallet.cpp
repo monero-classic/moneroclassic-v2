@@ -3651,7 +3651,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
         return false;
       }
       crypto::secret_key viewkey;
-      if (!viewkey_string.hex_to_pod(unwrap(unwrap(viewkey))))
+      if (!viewkey_string.hex_to_pod(unwrap(viewkey)))
       {
         fail_msg_writer() << tr("failed to parse view key secret key");
         return false;
@@ -3686,7 +3686,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
         fail_msg_writer() << tr("No data supplied, cancelled");
         return false;
       }
-      if (!spendkey_string.hex_to_pod(unwrap(unwrap(m_recovery_key))))
+      if (!spendkey_string.hex_to_pod(unwrap(m_recovery_key)))
       {
         fail_msg_writer() << tr("failed to parse spend key secret key");
         return false;
@@ -3728,7 +3728,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
         return false;
       }
       crypto::secret_key spendkey;
-      if (!spendkey_string.hex_to_pod(unwrap(unwrap(spendkey))))
+      if (!spendkey_string.hex_to_pod(unwrap(spendkey)))
       {
         fail_msg_writer() << tr("failed to parse spend key secret key");
         return false;
@@ -3743,7 +3743,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
         return false;
       }
       crypto::secret_key viewkey;
-      if(!viewkey_string.hex_to_pod(unwrap(unwrap(viewkey))))
+      if(!viewkey_string.hex_to_pod(unwrap(viewkey)))
       {
         fail_msg_writer() << tr("failed to parse view key secret key");
         return false;
@@ -3833,7 +3833,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
         return false;
       }
       crypto::secret_key viewkey;
-      if(!viewkey_string.hex_to_pod(unwrap(unwrap(viewkey))))
+      if(!viewkey_string.hex_to_pod(unwrap(viewkey)))
       {
         fail_msg_writer() << tr("failed to parse secret view key");
         return false;
@@ -3871,7 +3871,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
             fail_msg_writer() << tr("No data supplied, cancelled");
             return false;
           }
-          if(!spendkey_string.hex_to_pod(unwrap(unwrap(multisig_secret_spendkeys[i]))))
+          if(!spendkey_string.hex_to_pod(unwrap(multisig_secret_spendkeys[i])))
           {
             fail_msg_writer() << tr("failed to parse spend key secret key");
             return false;

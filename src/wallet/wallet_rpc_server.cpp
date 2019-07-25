@@ -2174,7 +2174,7 @@ namespace tools
     }
     const char *data = tx_key_str.data();
     crypto::secret_key tx_key;
-    if (!epee::wipeable_string(data, 64).hex_to_pod(unwrap(unwrap(tx_key))))
+    if (!epee::wipeable_string(data, 64).hex_to_pod(unwrap(tx_key)))
     {
       er.code = WALLET_RPC_ERROR_CODE_WRONG_KEY;
       er.message = "Tx key has invalid format";
@@ -2185,7 +2185,7 @@ namespace tools
     while (offset < tx_key_str.size())
     {
       additional_tx_keys.resize(additional_tx_keys.size() + 1);
-      if (!epee::wipeable_string(data + offset, 64).hex_to_pod(unwrap(unwrap(additional_tx_keys.back()))))
+      if (!epee::wipeable_string(data + offset, 64).hex_to_pod(unwrap(additional_tx_keys.back())))
       {
         er.code = WALLET_RPC_ERROR_CODE_WRONG_KEY;
         er.message = "Tx key has invalid format";
@@ -3374,7 +3374,7 @@ namespace tools
     epee::wipeable_string password = rc.second.password();
     epee::wipeable_string viewkey_string = req.viewkey;
     crypto::secret_key viewkey;
-    if (!viewkey_string.hex_to_pod(unwrap(unwrap(viewkey))))
+    if (!viewkey_string.hex_to_pod(unwrap(viewkey)))
     {
       er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
       er.message = "Failed to parse view key secret key";
@@ -3401,7 +3401,7 @@ namespace tools
       {
         epee::wipeable_string spendkey_string = req.spendkey;
         crypto::secret_key spendkey;
-        if (!spendkey_string.hex_to_pod(unwrap(unwrap(spendkey))))
+        if (!spendkey_string.hex_to_pod(unwrap(spendkey)))
         {
           er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
           er.message = "Failed to parse spend key secret key";
