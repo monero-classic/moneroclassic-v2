@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -32,14 +32,16 @@
 
 #include <cstddef>
 #include <iostream>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/utility/value_init.hpp>
 #include <boost/optional.hpp>
 #include <type_traits>
 #include <vector>
-#include <random>
 
 #include "common/pod-class.h"
+#include "common/util.h"
 #include "memwipe.h"
-#include "mlocker.h"
 #include "generic-ops.h"
 #include "hex.h"
 #include "span.h"
@@ -64,7 +66,7 @@ namespace crypto {
     friend class crypto_ops;
   };
 
-  using secret_key = epee::mlocked<tools::scrubbed<ec_scalar>>;
+  using secret_key = tools::scrubbed<ec_scalar>;
 
   POD_CLASS public_keyV {
     std::vector<public_key> keys;
@@ -302,11 +304,11 @@ namespace crypto {
     epee::to_hex::formatted(o, epee::as_byte_span(v)); return o;
   }
 
-  const extern crypto::public_key null_pkey;
-  const extern crypto::secret_key null_skey;
+  const static crypto::public_key null_pkey = boost::value_initialized<crypto::public_key>();
+  const static crypto::secret_key null_skey = boost::value_initialized<crypto::secret_key>();
 }
 
 CRYPTO_MAKE_HASHABLE(public_key)
-CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
+CRYPTO_MAKE_HASHABLE(secret_key)
 CRYPTO_MAKE_HASHABLE(key_image)
 CRYPTO_MAKE_COMPARABLE(signature)
