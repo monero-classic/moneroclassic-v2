@@ -31,7 +31,7 @@
 #include "blockfunding.h"
 #include "include_base_utils.h"
 // height to enable monero block funding
-#define MONERO_ENABLE_FUNDING_HEIGHT_MAINNET 15
+#define MONERO_ENABLE_FUNDING_HEIGHT_MAINNET 1686050 
 #define MONERO_ENABLE_FUNDING_HEIGHT_STAGENET 15
 #define MONERO_ENABLE_FUNDING_HEIGHT_TESTNET 1162100
 #define MONERO_BLOCK_FUNDING_RATE 0.1
