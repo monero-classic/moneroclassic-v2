@@ -48,6 +48,7 @@ target_link_libraries(ringct_basic
   PUBLIC
     common
     cncrypto
+    sodium
   PRIVATE
     ${OPENSSL_LIBRARIES}
     ${EXTRA_LIBRARIES})
