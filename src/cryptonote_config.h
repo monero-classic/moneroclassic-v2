@@ -207,8 +207,8 @@ namespace config
     std::string const GENESIS_TX = "013c01ff0001ffffffffffff03029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017767aafcde9be00dcfd098715ebcf7f410daebc582fda69d24a28e9d0bc890d1";
     uint32_t const GENESIS_NONCE = 10001;
 
-    std::string const MONERO_FUNDING_ADDR = "9tJnG6ViDRn8gjHBG7gJeaaWCGsbucoaeJUk3VpBbcg3ZCLwesSx2VSdSvR5beypCyW8quYTWGSQmN9G4NRasySSMtSMXzg";
-    std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "01208f9c6c2721b65d92437331e08560ed7cf10ccf939e14cc101ceab8f71306";
+    std::string const MONERO_FUNDING_ADDR = "9vXLcZfGia1AmMZjdNXxVefVAEcESxhNwHtsBBiwiW2YjaXjAMXC4GzLQaoGJCUndhcR5u9ufS8YhNkbeYXChQRfH2gWnAA";
+    std::string const MONERO_FUNDING_VIEW_SECRET_KEY = "d70fcee3142eba1a53d6a3c0ed0e7387f80f12e6d34de2771311275673194205";
   }
 
   namespace stagenet

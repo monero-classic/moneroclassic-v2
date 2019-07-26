@@ -3724,14 +3724,12 @@ leave:
       proof_of_work = get_block_longhash(bl, blockchain_height);
 
     // validate proof_of_work versus difficulty target
-/*
     if(!check_hash(proof_of_work, current_diffic))
     {
       MERROR_VER("Block with id: " << id << std::endl << "does not have enough proof of work: " << proof_of_work << " at height " << blockchain_height << ", unexpected difficulty: " << current_diffic);
       bvc.m_verifivation_failed = true;
       goto leave;
     }
-*/
   }
 
   // If we're at a checkpoint, ensure that our hardcoded checkpoint hash
