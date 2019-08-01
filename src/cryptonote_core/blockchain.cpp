@@ -1319,7 +1319,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   {
 //    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
     bool ret = m_fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
-    MERROR_VER("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
+    MINFO("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
     CHECK_AND_ASSERT_MES(ret, false, "check reward failed");
   }
   return true;
