@@ -325,7 +325,7 @@ PRAGMA_WARNING_DISABLE_VS(4355)
     TRY_ENTRY();
     //_info("[sock " << socket().native_handle() << "] Async read calledback.");
     
-    if (!e)
+    if (!e || e == boost::asio::error::eof)
     {
 		{
 			CRITICAL_REGION_LOCAL(m_throttle_speed_in_mutex);
