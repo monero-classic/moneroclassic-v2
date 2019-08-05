@@ -34,6 +34,7 @@
 #define MONERO_ENABLE_FUNDING_HEIGHT_MAINNET 1686050 
 #define MONERO_ENABLE_FUNDING_HEIGHT_STAGENET 15
 #define MONERO_ENABLE_FUNDING_HEIGHT_TESTNET 1162100
+#define MONERO_ENABLE_FUNDING_HEIGHT_REGTESTNET 10
 #define MONERO_BLOCK_FUNDING_RATE 0.1
 using namespace cryptonote;
 using namespace std;
@@ -58,6 +59,7 @@ bool BlockFunding::get_funding_address_and_key(account_keys& funding_keys)
 
     switch(m_network_type)
     {
+        case FAKECHAIN:
         case MAINNET:
             {
                 funding_addr = config::MONERO_FUNDING_ADDR;
@@ -110,6 +112,10 @@ bool BlockFunding::funding_enabled(uint64_t height)
     else if(m_network_type == TESTNET)
     {
         return height >= MONERO_ENABLE_FUNDING_HEIGHT_TESTNET;
+    }
+    else if(m_network_type == FAKECHAIN)
+    {
+        return height >= MONERO_ENABLE_FUNDING_HEIGHT_REGTESTNET;
     }
     return false;
 }
