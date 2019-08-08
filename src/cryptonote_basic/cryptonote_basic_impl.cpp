@@ -87,7 +87,10 @@ namespace cryptonote {
     const int target_minutes = target / 60;
     const int emission_speed_factor = EMISSION_SPEED_FACTOR_PER_MINUTE - (target_minutes-1);
 
-    uint64_t base_reward = (MONEY_SUPPLY - already_generated_coins) >> emission_speed_factor;
+    // release
+    // uint64_t base_reward = version < 0xa7 ? (MONEY_SUPPLY - already_generated_coins) >> emission_speed_factor : MONERO_BLOCK_REWARD;
+    // debug
+    uint64_t base_reward = MONERO_BLOCK_REWARD;
     if (base_reward < FINAL_SUBSIDY_PER_MINUTE*target_minutes)
     {
       base_reward = FINAL_SUBSIDY_PER_MINUTE*target_minutes;

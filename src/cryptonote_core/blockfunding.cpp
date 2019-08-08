@@ -35,7 +35,8 @@
 #define MONERO_ENABLE_FUNDING_HEIGHT_STAGENET 15
 #define MONERO_ENABLE_FUNDING_HEIGHT_TESTNET 1162100
 #define MONERO_ENABLE_FUNDING_HEIGHT_REGTESTNET 10
-#define MONERO_BLOCK_FUNDING_RATE 0.1
+#define MONERO_BLOCK_FUNDING_RATE 0.6
+
 using namespace cryptonote;
 using namespace std;
 bool BlockFunding::init(const network_type nettype)
