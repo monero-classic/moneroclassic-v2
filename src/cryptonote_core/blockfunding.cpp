@@ -35,7 +35,8 @@
 #define MONERO_ENABLE_FUNDING_HEIGHT_STAGENET 15
 #define MONERO_ENABLE_FUNDING_HEIGHT_TESTNET 1162100
 #define MONERO_ENABLE_FUNDING_HEIGHT_REGTESTNET 10
-#define MONERO_BLOCK_FUNDING_RATE 0.6
+#define MONERO_BLOCK_FUNDING_RATE 0.1
+#define MONERO_BLOCK_FUNDING_RATE_NEW 0.6 // from version 0xa7
 
 using namespace cryptonote;
 using namespace std;
@@ -139,18 +140,21 @@ uint64_t BlockFunding::get_funding_enabled_height()
     return 0;
 }
 
-bool BlockFunding::fund_from_block(uint64_t original_reward, uint64_t& miner_reward, uint64_t& funding)
+//bool BlockFunding::fund_from_block(uint64_t original_reward, uint64_t& miner_reward, uint64_t& funding)
+bool BlockFunding::fund_from_block(uint64_t original_reward, uint64_t& miner_reward, uint64_t& funding, bool fork)
 {
-    funding = (uint64_t)(original_reward * MONERO_BLOCK_FUNDING_RATE);
+    //funding = (uint64_t)(original_reward * MONERO_BLOCK_FUNDING_RATE);
+    funding = fork ? (uint64_t)(original_reward * MONERO_BLOCK_FUNDING_RATE_NEW) : (uint64_t)(original_reward * MONERO_BLOCK_FUNDING_RATE);
     miner_reward = (uint64_t)(original_reward - funding);
     //check
     return true;
 }
 
-bool BlockFunding::check_block_funding(uint64_t actual_miner_reward, uint64_t actual_funding, uint64_t real_reward)
+//bool BlockFunding::check_block_funding(uint64_t actual_miner_reward, uint64_t actual_funding, uint64_t real_reward)
+bool BlockFunding::check_block_funding(uint64_t actual_miner_reward, uint64_t actual_funding, uint64_t real_reward, bool fork)
 {
     uint64_t real_miner_reward, real_funding;
-    fund_from_block(real_reward, real_miner_reward, real_funding);
+    fund_from_block(real_reward, real_miner_reward, real_funding, fork);
     return (actual_miner_reward == real_miner_reward) && (actual_funding == real_funding);
 }
 

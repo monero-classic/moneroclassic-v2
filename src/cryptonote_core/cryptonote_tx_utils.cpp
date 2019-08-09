@@ -97,7 +97,8 @@ namespace cryptonote
     CHECK_AND_ASSERT_MES(fundctl.init(nettype), false, "init fundctl failed");
 
     uint64_t block_reward;
-    if(!get_block_reward(median_weight, current_block_weight, already_generated_coins, block_reward, hard_fork_version))
+    bool fork = height >= TEST_NEW_BLOCK_REWARD_HEIGHT;
+    if(!get_block_reward(median_weight, current_block_weight, already_generated_coins, block_reward, hard_fork_version, fork))
     {
       LOG_PRINT_L0("Block is too big");
       return false;
@@ -124,7 +125,7 @@ namespace cryptonote
     uint64_t fund_reward = 0;
     if (enable_fund)
     {
-      fundctl.fund_from_block(block_reward, miner_reward, fund_reward);
+      fundctl.fund_from_block(block_reward, miner_reward, fund_reward, fork);
       block_reward = miner_reward;
       MERROR("construct_miner_tx,block_reward=" << block_reward <<",fund_reward=" << fund_reward << ",height=" << height);
     }

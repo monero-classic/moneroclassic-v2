@@ -1284,7 +1284,8 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 
   std::vector<uint64_t> last_blocks_weights;
   get_last_n_blocks_weights(last_blocks_weights, CRYPTONOTE_REWARD_BLOCKS_WINDOW);
-  if (!get_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, base_reward, version))
+  bool fork = height >= TEST_NEW_BLOCK_REWARD_HEIGHT;
+  if (!get_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, base_reward, version, fork))
   {
     MERROR_VER("block weight " << cumulative_block_weight << " is bigger than allowed for this blockchain");
     return false;
@@ -1318,7 +1319,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   if (m_fundctl.funding_enabled(height))
   {
 //    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
-    bool ret = m_fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
+    bool ret = m_fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee, fork);
     MINFO("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
     CHECK_AND_ASSERT_MES(ret, false, "check reward failed");
   }
@@ -1518,7 +1519,8 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
 
   size_t txs_weight;
   uint64_t fee;
-  if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, b.major_version))
+  bool fork = height >= TEST_NEW_BLOCK_REWARD_HEIGHT;
+  if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, b.major_version, fork))
   {
     return false;
   }
@@ -3329,7 +3331,8 @@ bool Blockchain::check_fee(size_t tx_weight, uint64_t fee) const
     median = m_current_block_cumul_weight_limit / 2;
     const uint64_t blockchain_height = m_db->height();
     already_generated_coins = blockchain_height ? m_db->get_block_already_generated_coins(blockchain_height - 1) : 0;
-    if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
+    bool fork = blockchain_height >= TEST_NEW_BLOCK_REWARD_HEIGHT;
+    if (!get_block_reward(median, 1, already_generated_coins, base_reward, version, fork))
       return false;
   }
 
@@ -3395,7 +3398,8 @@ uint64_t Blockchain::get_dynamic_base_fee_estimate(uint64_t grace_blocks) const
 
   uint64_t already_generated_coins = db_height ? m_db->get_block_already_generated_coins(db_height - 1) : 0;
   uint64_t base_reward;
-  if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
+  bool fork = db_height >= TEST_NEW_BLOCK_REWARD_HEIGHT;
+  if (!get_block_reward(median, 1, already_generated_coins, base_reward, version, fork))
   {
     MERROR("Failed to determine block reward, using placeholder " << print_money(BLOCK_REWARD_OVERESTIMATE) << " as a high bound");
     base_reward = BLOCK_REWARD_OVERESTIMATE;

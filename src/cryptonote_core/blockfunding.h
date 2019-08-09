@@ -38,6 +38,8 @@
 #include "cryptonote_basic/verification_context.h"
 #include "crypto/hash.h"
 
+// just for test
+#define TEST_NEW_BLOCK_REWARD_HEIGHT 1995000
 
 namespace cryptonote{
     class BlockFunding
@@ -46,9 +48,11 @@ namespace cryptonote{
             BlockFunding(){}
             bool init(const network_type nettype = MAINNET);
             bool funding_enabled(uint64_t height);
-            bool check_block_funding(uint64_t actual_miner_reward, uint64_t actual_funding, uint64_t real_reward);
+//            bool check_block_funding(uint64_t actual_miner_reward, uint64_t actual_funding, uint64_t real_reward);
+            bool check_block_funding(uint64_t actual_miner_reward, uint64_t actual_funding, uint64_t real_reward, bool fork);
             bool get_funding_from_miner_tx(const transaction& miner_tx, uint64_t& funding_amount);
-            bool fund_from_block(uint64_t original_reward, uint64_t& miner_reward, uint64_t& funding);
+//            bool fund_from_block(uint64_t original_reward, uint64_t& miner_reward, uint64_t& funding);
+            bool fund_from_block(uint64_t original_reward, uint64_t& miner_reward, uint64_t& funding, bool fork);
             uint64_t get_funding_enabled_height();
             account_public_address& public_address();
         private:
