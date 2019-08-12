@@ -38,9 +38,6 @@
 #include "cryptonote_basic/verification_context.h"
 #include "crypto/hash.h"
 
-// just for test
-#define TEST_NEW_BLOCK_REWARD_HEIGHT 1995000
-
 namespace cryptonote{
     class BlockFunding
     {

@@ -97,8 +97,7 @@ namespace cryptonote
     CHECK_AND_ASSERT_MES(fundctl.init(nettype), false, "init fundctl failed");
 
     uint64_t block_reward;
-    bool fork = height >= TEST_NEW_BLOCK_REWARD_HEIGHT;
-    if(!get_block_reward(median_weight, current_block_weight, already_generated_coins, block_reward, hard_fork_version, fork))
+    if(!get_block_reward(median_weight, current_block_weight, already_generated_coins, block_reward, hard_fork_version))
     {
       LOG_PRINT_L0("Block is too big");
       return false;
