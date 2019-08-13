@@ -91,8 +91,8 @@
 #define DIFFICULTY_CUT_ADJUST                           6  // timestamps to cut after sorting
 #define DIFFICULTY_BLOCKS_COUNT_ADJUST                  DIFFICULTY_WINDOW_ADJUST + DIFFICULTY_LAG_ADJUST
 #define BLOCK_FUTURE_TIME_LIMIT_ADJUST			(DIFFICULTY_WINDOW_ADJUST * DIFFICULTY_TARGET_V2 / 20)
-#define DIFFICULTY_GUESS				5730
-#define DIFFICULTY_ADJUST_HEIGHT			1888000
+#define DIFFICULTY_GUESS				3000
+#define DIFFICULTY_ADJUST_HEIGHT			1907000
 
 #define CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1   DIFFICULTY_TARGET_V1 * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS
 #define CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2   DIFFICULTY_TARGET_V2 * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS
@@ -148,6 +148,7 @@
 
 #define THREAD_STACK_SIZE                       5 * 1024 * 1024
 
+/*
 #define HF_VERSION_DYNAMIC_FEE                  4
 #define HF_VERSION_MIN_MIXIN_4                  6
 #define HF_VERSION_MIN_MIXIN_6                  7
@@ -156,6 +157,16 @@
 #define HF_VERSION_PER_BYTE_FEE                 8
 #define HF_VERSION_SMALLER_BP                   10
 #define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       10
+*/
+
+#define HF_VERSION_DYNAMIC_FEE                  4
+#define HF_VERSION_MIN_MIXIN_4                  6
+#define HF_VERSION_MIN_MIXIN_6                  0xee
+#define HF_VERSION_MIN_MIXIN_10                 0xee
+#define HF_VERSION_ENFORCE_RCT                  6
+#define HF_VERSION_PER_BYTE_FEE                 0xee
+#define HF_VERSION_SMALLER_BP                   0xee
+#define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       0xee
 
 #define PER_KB_FEE_QUANTIZATION_DECIMALS        8
 
