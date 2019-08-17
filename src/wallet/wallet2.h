@@ -798,6 +798,7 @@ private:
     hw::device::device_type get_device_type() const { return m_key_device_type; }
     bool reconnect_device();
 
+/*
     // locked & unlocked balance of given or current subaddress account
     uint64_t balance(uint32_t subaddr_index_major) const;
     uint64_t unlocked_balance(uint32_t subaddr_index_major, uint64_t *blocks_to_unlock = NULL) const;
@@ -807,6 +808,18 @@ private:
     // all locked & unlocked balances of all subaddress accounts
     uint64_t balance_all() const;
     uint64_t unlocked_balance_all(uint64_t *blocks_to_unlock = NULL) const;
+*/
+
+    // locked & unlocked balance of given or current subaddress account
+    xmc_int balance(uint32_t subaddr_index_major) const;
+    xmc_int unlocked_balance(uint32_t subaddr_index_major, uint64_t *blocks_to_unlock = NULL) const;
+    // locked & unlocked balance per subaddress of given or current subaddress account
+    std::map<uint32_t, xmc_int> balance_per_subaddress(uint32_t subaddr_index_major) const;
+    std::map<uint32_t, std::pair<xmc_int, uint64_t>> unlocked_balance_per_subaddress(uint32_t subaddr_index_major) const;
+    // all locked & unlocked balances of all subaddress accounts
+    xmc_int balance_all() const;
+    xmc_int unlocked_balance_all(uint64_t *blocks_to_unlock = NULL) const;
+
     template<typename T>
     void transfer_selected(const std::vector<cryptonote::tx_destination_entry>& dsts, const std::vector<size_t>& selected_transfers, size_t fake_outputs_count,
       std::vector<std::vector<tools::wallet2::get_outs_entry>> &outs,

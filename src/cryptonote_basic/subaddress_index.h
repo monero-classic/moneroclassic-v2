@@ -33,6 +33,9 @@
 #include <boost/serialization/version.hpp>
 #include <ostream>
 
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_int xmc_int;
+
 namespace cryptonote
 {
   struct subaddress_index
