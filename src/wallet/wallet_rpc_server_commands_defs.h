@@ -77,8 +77,10 @@ namespace wallet_rpc
       uint32_t account_index;
       uint32_t address_index;
       std::string address;
-      uint64_t balance;
-      uint64_t unlocked_balance;
+//      uint64_t balance;
+//      uint64_t unlocked_balance;
+      std::string balance;
+      std::string unlocked_balance;
       std::string label;
       uint64_t num_unspent_outputs;
       uint64_t blocks_to_unlock;
@@ -97,8 +99,10 @@ namespace wallet_rpc
 
     struct response_t
     {
-      uint64_t 	 balance;
-      uint64_t 	 unlocked_balance;
+//     uint64_t 	 balance;
+//     uint64_t 	 unlocked_balance;
+      std::string balance;
+      std::string unlocked_balance;
       bool       multisig_import_needed;
       std::vector<per_subaddress_info> per_subaddress;
       uint64_t   blocks_to_unlock;
@@ -241,8 +245,10 @@ namespace wallet_rpc
     {
       uint32_t account_index;
       std::string base_address;
-      uint64_t balance;
-      uint64_t unlocked_balance;
+//      uint64_t balance;
+//      uint64_t unlocked_balance;
+      std::string balance;
+      std::string unlocked_balance;
       std::string label;
       std::string tag;
 
@@ -258,8 +264,10 @@ namespace wallet_rpc
 
     struct response_t
     {
-      uint64_t total_balance;
-      uint64_t total_unlocked_balance;
+//      uint64_t total_balance;
+//      uint64_t total_unlocked_balance;
+      std::string total_balance;
+      std::string total_unlocked_balance;
       std::vector<subaddress_account_info> subaddress_accounts;
 
       BEGIN_KV_SERIALIZE_MAP()

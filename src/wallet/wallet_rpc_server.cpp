@@ -417,11 +417,22 @@ namespace tools
     if (!m_wallet) return not_open(er);
     try
     {
-      res.balance = req.all_accounts ? m_wallet->balance_all() : m_wallet->balance(req.account_index);
-      res.unlocked_balance = req.all_accounts ? m_wallet->unlocked_balance_all(&res.blocks_to_unlock) : m_wallet->unlocked_balance(req.account_index, &res.blocks_to_unlock);
+//      res.balance = req.all_accounts ? m_wallet->balance_all() : m_wallet->balance(req.account_index);
+//      res.unlocked_balance = req.all_accounts ? m_wallet->unlocked_balance_all(&res.blocks_to_unlock) : m_wallet->unlocked_balance(req.account_index, &res.blocks_to_unlock);
+      xmc_int bal = req.all_accounts ? m_wallet->balance_all() : m_wallet->balance(req.account_index);
+      xmc_int unbal = req.all_accounts ? m_wallet->unlocked_balance_all(&res.blocks_to_unlock) : m_wallet->unlocked_balance(req.account_index, &res.blocks_to_unlock);
+      std::stringstream ss_bal;
+      ss_bal << bal;
+      std::stringstream ss_unbal;
+      ss_unbal << unbal;
+      res.balance = ss_bal.str();
+      res.unlocked_balance = ss_unbal.str();
+
       res.multisig_import_needed = m_wallet->multisig() && m_wallet->has_multisig_partial_key_images();
-      std::map<uint32_t, std::map<uint32_t, uint64_t>> balance_per_subaddress_per_account;
-      std::map<uint32_t, std::map<uint32_t, std::pair<uint64_t, uint64_t>>> unlocked_balance_per_subaddress_per_account;
+//      std::map<uint32_t, std::map<uint32_t, uint64_t>> balance_per_subaddress_per_account;
+//      std::map<uint32_t, std::map<uint32_t, std::pair<uint64_t, uint64_t>>> unlocked_balance_per_subaddress_per_account;
+      std::map<uint32_t, std::map<uint32_t, xmc_int>> balance_per_subaddress_per_account;
+      std::map<uint32_t, std::map<uint32_t, std::pair<xmc_int, uint64_t>>> unlocked_balance_per_subaddress_per_account;
       if (req.all_accounts)
       {
         for (uint32_t account_index = 0; account_index < m_wallet->get_num_subaddress_accounts(); ++account_index)
@@ -440,8 +451,10 @@ namespace tools
       for (const auto& p : balance_per_subaddress_per_account)
       {
         uint32_t account_index = p.first;
-        std::map<uint32_t, uint64_t> balance_per_subaddress = p.second;
-        std::map<uint32_t, std::pair<uint64_t, uint64_t>> unlocked_balance_per_subaddress = unlocked_balance_per_subaddress_per_account[account_index];
+//        std::map<uint32_t, uint64_t> balance_per_subaddress = p.second;
+//        std::map<uint32_t, std::pair<uint64_t, uint64_t>> unlocked_balance_per_subaddress = unlocked_balance_per_subaddress_per_account[account_index];
+        std::map<uint32_t, xmc_int> balance_per_subaddress = p.second;
+        std::map<uint32_t, std::pair<xmc_int, uint64_t>> unlocked_balance_per_subaddress = unlocked_balance_per_subaddress_per_account[account_index];
         std::set<uint32_t> address_indices;
         if (!req.all_accounts && !req.address_indices.empty())
         {
@@ -459,8 +472,17 @@ namespace tools
           info.address_index = i;
           cryptonote::subaddress_index index = {info.account_index, info.address_index};
           info.address = m_wallet->get_subaddress_as_str(index);
-          info.balance = balance_per_subaddress[i];
-          info.unlocked_balance = unlocked_balance_per_subaddress[i].first;
+//          info.balance = balance_per_subaddress[i];
+//          info.unlocked_balance = unlocked_balance_per_subaddress[i].first;
+          xmc_int b = balance_per_subaddress[i];
+          xmc_int ub = balance_per_subaddress[i];
+          std::stringstream ss_b;
+          std::stringstream ss_ub;
+          ss_b << b;
+          ss_ub << ub;
+          info.balance = ss_b.str();
+          info.unlocked_balance = ss_ub.str();
+
           info.blocks_to_unlock = unlocked_balance_per_subaddress[i].second;
           info.label = m_wallet->get_subaddress_label(index);
           info.num_unspent_outputs = std::count_if(transfers.begin(), transfers.end(), [&](const tools::wallet2::transfer_details& td) { return !td.m_spent && td.m_subaddr_index == index; });
@@ -574,8 +596,10 @@ namespace tools
     if (!m_wallet) return not_open(er);
     try
     {
-      res.total_balance = 0;
-      res.total_unlocked_balance = 0;
+//      res.total_balance = 0;
+//      res.total_unlocked_balance = 0;
+      xmc_int total_bal = 0;
+      xmc_int total_unbal = 0;
       cryptonote::subaddress_index subaddr_index = {0,0};
       const std::pair<std::map<std::string, std::string>, std::vector<std::string>> account_tags = m_wallet->get_account_tags();
       if (!req.tag.empty() && account_tags.first.count(req.tag) == 0)
@@ -591,14 +615,33 @@ namespace tools
         wallet_rpc::COMMAND_RPC_GET_ACCOUNTS::subaddress_account_info info;
         info.account_index = subaddr_index.major;
         info.base_address = m_wallet->get_subaddress_as_str(subaddr_index);
-        info.balance = m_wallet->balance(subaddr_index.major);
-        info.unlocked_balance = m_wallet->unlocked_balance(subaddr_index.major);
+//        info.balance = m_wallet->balance(subaddr_index.major);
+//        info.unlocked_balance = m_wallet->unlocked_balance(subaddr_index.major);
+        xmc_int b = m_wallet->balance(subaddr_index.major);
+        xmc_int ub = m_wallet->unlocked_balance(subaddr_index.major);
+        std::stringstream ss_b;
+        std::stringstream ss_ub;
+        ss_b << b;
+        ss_ub << ub;
+        info.balance = ss_b.str();
+        info.unlocked_balance = ss_ub.str();
+
         info.label = m_wallet->get_subaddress_label(subaddr_index);
         info.tag = account_tags.second[subaddr_index.major];
         res.subaddress_accounts.push_back(info);
-        res.total_balance += info.balance;
-        res.total_unlocked_balance += info.unlocked_balance;
+//        res.total_balance += info.balance;
+//        res.total_unlocked_balance += info.unlocked_balance;
+//        total_bal += info.balance;
+//        total_unbal += info.unlocked_balance;
+        total_bal += b;
+        total_unbal += ub;
       }
+      std::stringstream ss_bal;
+      ss_bal << total_bal;
+      std::stringstream ss_unbal;
+      ss_unbal << total_unbal;
+      res.total_balance = ss_bal.str();
+      res.total_unlocked_balance = ss_unbal.str();
     }
     catch (const std::exception& e)
     {
