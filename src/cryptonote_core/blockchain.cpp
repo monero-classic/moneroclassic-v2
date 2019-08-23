@@ -109,7 +109,7 @@ static const struct {
   { 6, 1400000, 0, 1503046577 },
 
   // version 0xa7 starts from block 1907000
-  { 0xa7, 1907000, 0, 1565600181},
+  { 0xa7, DIFFICULTY_ADJUST_HEIGHT, 0, 1565600181},
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 1009826;
 
