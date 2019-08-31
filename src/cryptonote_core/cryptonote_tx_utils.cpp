@@ -124,6 +124,7 @@ namespace cryptonote
     uint64_t fund_reward = 0;
     if (enable_fund)
     {
+      bool fork = height >= DIFFICULTY_ADJUST_HEIGHT;
       fundctl.fund_from_block(block_reward, miner_reward, fund_reward, fork);
       block_reward = miner_reward;
       MERROR("construct_miner_tx,block_reward=" << block_reward <<",fund_reward=" << fund_reward << ",height=" << height);
