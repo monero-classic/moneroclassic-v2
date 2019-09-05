@@ -108,8 +108,8 @@ static const struct {
   // version 6 starts from block 1400000, which is on or around the 16th of September, 2017. Fork time finalised on 2017-08-18.
   { 6, 1400000, 0, 1503046577 },
 
-  // version 0xa7 starts from block 1907000
-  { 0xa7, DIFFICULTY_ADJUST_HEIGHT, 0, 1565600181},
+  // version 60 starts from block 1907000
+  { HF_VERSION_60, DIFFICULTY_ADJUST_HEIGHT, 0, 1565600181},
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 1009826;
 
@@ -132,8 +132,8 @@ static const struct {
 
   { 6, 971400, 0, 1501709789 },
 
-  // version 0xa7 starts from block 1881040 , timestamp after block 1876000 + 1week
-//  { 0xa7, 1881040, 0, 1561887557 + 7*24*60*60 },
+  // version 60 starts from block 1881040 , timestamp after block 1876000 + 1week
+//  { HF_VERSION_60, 1881040, 0, 1561887557 + 7*24*60*60 },
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
 
@@ -3239,7 +3239,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
     if (rct::is_rct_bulletproof(rv.type))
     {
 //      if (hf_version < 8)
-      if (hf_version > 0xa7)
+      if (hf_version > HF_VERSION_60)
       {
         for (const rct::Bulletproof &proof: rv.p.bulletproofs)
         {
@@ -3904,7 +3904,7 @@ leave:
   // at MONEY_SUPPLY. already_generated_coins is only used to compute the block subsidy and MONEY_SUPPLY yields a
   // subsidy of 0 under the base formula and therefore the minimum subsidy >0 in the tail state.
 //  already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward : MONEY_SUPPLY;
-  if (m_hardfork->get_current_version() < 0xa7)
+  if (m_hardfork->get_current_version() < HF_VERSION_60)
     already_generated_coins = already_generated_coins + base_reward;
 
   if(blockchain_height)

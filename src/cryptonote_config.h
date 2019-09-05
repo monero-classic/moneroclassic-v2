@@ -52,7 +52,7 @@
 
 // MONEY_SUPPLY - total number coins to be generated
 #define MONEY_SUPPLY                                    ((uint64_t)(-1))
-#define MONERO_BLOCK_REWARD                             10000000000000  // pow(10, 13) from version 0xa7
+#define MONERO_BLOCK_REWARD                             10000000000000  // pow(10, 13) from version 60
 #define EMISSION_SPEED_FACTOR_PER_MINUTE                (20)
 #define FINAL_SUBSIDY_PER_MINUTE                        ((uint64_t)300000000000) // 3 * pow(10, 11)
 
@@ -93,6 +93,7 @@
 #define BLOCK_FUTURE_TIME_LIMIT_ADJUST			(DIFFICULTY_WINDOW_ADJUST * DIFFICULTY_TARGET_V2 / 20)
 #define DIFFICULTY_GUESS				2000
 #define DIFFICULTY_ADJUST_HEIGHT			9000000
+#define HF_VERSION_60                                  60
 
 #define CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1   DIFFICULTY_TARGET_V1 * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS
 #define CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2   DIFFICULTY_TARGET_V2 * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS
