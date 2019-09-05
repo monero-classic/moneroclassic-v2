@@ -1243,7 +1243,8 @@ namespace cryptonote
       return true;
     }
     blobdata bd = get_block_hashing_blob(b);
-    const int cn_variant = b.major_version >= 7 ? b.major_version - 6 : 0;
+//    const int cn_variant = b.major_version >= 7 ? b.major_version - 6 : 0;
+    const int cn_variant = 0;
     crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant);
     return true;
   }
