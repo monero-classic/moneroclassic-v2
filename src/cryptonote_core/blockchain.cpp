@@ -132,8 +132,8 @@ static const struct {
 
   { 6, 971400, 0, 1501709789 },
 
-  // version 60 starts from block 1881040 , timestamp after block 1876000 + 1week
-//  { HF_VERSION_60, 1881040, 0, 1561887557 + 7*24*60*60 },
+  // version 60 starts from block 1926600
+  { HF_VERSION_60, DIFFICULTY_ADJUST_HEIGHT, 0, 1568008900},
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
 
