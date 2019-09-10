@@ -200,11 +200,12 @@ namespace cryptonote {
       return check_hash_128(hash, difficulty);
   }
 
-  difficulty_type next_difficulty(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds, uint64_t height) {
+  difficulty_type next_difficulty(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds, uint64_t height, network_type nettype) {
     //cutoff DIFFICULTY_LAG
     size_t difficulty_window = 0;
     size_t difficulty_cut = 0;
-    if (height >= static_cast<size_t>(DIFFICULTY_ADJUST_HEIGHT)) {
+    uint64_t adjust_height = nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
+    if (height >= static_cast<size_t>(adjust_height)) {
         difficulty_window = static_cast<size_t>(DIFFICULTY_WINDOW_ADJUST);
         difficulty_cut = static_cast<size_t>(DIFFICULTY_CUT_ADJUST);
     }

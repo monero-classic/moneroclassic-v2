@@ -132,8 +132,8 @@ static const struct {
 
   { 6, 971400, 0, 1501709789 },
 
-  // version 60 starts from block 1926600
-  { HF_VERSION_60, DIFFICULTY_ADJUST_HEIGHT, 0, 1568008900},
+  // version 60 starts from block DIFFICULTY_ADJUST_HEIGHT_TESTNET
+  { HF_VERSION_60, DIFFICULTY_ADJUST_HEIGHT_TESTNET, 0, 1568008900},
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
 
@@ -899,6 +899,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   //    then when the next block difficulty is queried, push the latest height data and
   //    pop the oldest one from the list. This only requires 1x read per height instead
   //    of doing 735 (DIFFICULTY_BLOCKS_COUNT).
+  uint64_t adjust_height = m_nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
   if (m_timestamps_and_difficulties_height != 0 && ((height - m_timestamps_and_difficulties_height) == 1) && m_timestamps.size() >= DIFFICULTY_BLOCKS_COUNT)
   {
     uint64_t index = height - 1;
@@ -906,7 +907,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
     m_difficulties.push_back(m_db->get_block_cumulative_difficulty(index));
 
     size_t difficulty_blocks_count = 0;
-    if (height >= DIFFICULTY_ADJUST_HEIGHT) {
+    if (height >= adjust_height) {
         difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_ADJUST;
     }
     else {
@@ -926,7 +927,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
   else
   {
-    size_t difficulty_blocks_count = height >= DIFFICULTY_ADJUST_HEIGHT ? static_cast<size_t>(DIFFICULTY_BLOCKS_COUNT_ADJUST) : static_cast<size_t>(DIFFICULTY_BLOCKS_COUNT);
+    size_t difficulty_blocks_count = height >= adjust_height ? static_cast<size_t>(DIFFICULTY_BLOCKS_COUNT_ADJUST) : static_cast<size_t>(DIFFICULTY_BLOCKS_COUNT);
     size_t offset = height - std::min < size_t > (height, difficulty_blocks_count);
 //    uint64_t offset = height - std::min <uint64_t> (height, static_cast<uint64_t>(DIFFICULTY_BLOCKS_COUNT));
     if (offset == 0)
@@ -952,11 +953,12 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   size_t target = get_difficulty_target();
 //  difficulty_type diff = next_difficulty(timestamps, difficulties, target);
   difficulty_type diff;
-  if(m_db->height() < DIFFICULTY_ADJUST_HEIGHT) {
-    diff = next_difficulty(timestamps, difficulties, target, height);
+  if (m_db->height() < adjust_height) {
+    diff = next_difficulty(timestamps, difficulties, target, height, m_nettype);
   }
   else {
-    diff = LWMA1_(timestamps, difficulties, DIFFICULTY_TARGET_V2, DIFFICULTY_WINDOW_ADJUST, height,  DIFFICULTY_ADJUST_HEIGHT, DIFFICULTY_GUESS);
+    uint64_t guess = m_nettype == TESTNET ? DIFFICULTY_GUESS_TESTNET : DIFFICULTY_GUESS;
+    diff = LWMA1_(timestamps, difficulties, DIFFICULTY_TARGET_V2, DIFFICULTY_WINDOW_ADJUST, height, adjust_height, guess);
   }
 
   CRITICAL_REGION_LOCAL1(m_difficulty_lock);
@@ -1138,14 +1140,15 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 //  if(alt_chain.size()< DIFFICULTY_BLOCKS_COUNT)
   size_t difficulty_blocks_count = 0;
   LOG_PRINT_L0("---->> block_extended_info height:" << m_db->height());
-  if(m_db->height() >= DIFFICULTY_ADJUST_HEIGHT) {
+  uint64_t adjust_height = m_nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
+  if (m_db->height() >= adjust_height) {
     difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_ADJUST;
   }
   else {
     difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT;
   }
 
-  if(alt_chain.size()< difficulty_blocks_count)
+  if (alt_chain.size() < difficulty_blocks_count)
   {
     CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
@@ -1203,11 +1206,12 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 
   // calculate the difficulty target for the block and return it
 //  return next_difficulty(timestamps, cumulative_difficulties, target);
-  if (m_db->height() < DIFFICULTY_ADJUST_HEIGHT) {
-    return next_difficulty(timestamps, cumulative_difficulties, target, m_db->height());
+  if (m_db->height() < adjust_height) {
+    return next_difficulty(timestamps, cumulative_difficulties, target, m_db->height(), m_nettype);
   }
   else {
-    return LWMA1_(timestamps, cumulative_difficulties, DIFFICULTY_TARGET_V2, DIFFICULTY_WINDOW_ADJUST, m_db->height(), DIFFICULTY_ADJUST_HEIGHT, DIFFICULTY_GUESS);
+    uint64_t guess = m_nettype == TESTNET ? DIFFICULTY_GUESS_TESTNET : DIFFICULTY_GUESS;
+    return LWMA1_(timestamps, cumulative_difficulties, DIFFICULTY_TARGET_V2, DIFFICULTY_WINDOW_ADJUST, m_db->height(), adjust_height, guess);
   }
 }
 //------------------------------------------------------------------
@@ -1318,7 +1322,8 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   if (m_fundctl.funding_enabled(height))
   {
 //    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
-    bool fork = height >= DIFFICULTY_ADJUST_HEIGHT;
+    uint64_t adjust_height = m_nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
+    bool fork = height >= adjust_height;
     bool ret = m_fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee, fork);
     MINFO("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
     CHECK_AND_ASSERT_MES(ret, false, "check reward failed");
@@ -1658,8 +1663,9 @@ bool Blockchain::complete_timestamps_vector(uint64_t start_top_height, std::vect
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 
-//  if(timestamps.size() >= BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW)
-  size_t bc_ts_check_window = m_db->height() > DIFFICULTY_ADJUST_HEIGHT ? static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_ADJUST) : static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
+//  if(timestamps.size() >= BLOCKCHAIN_TIMESTAMP _CHECK_WINDOW)
+  uint64_t adjust_height = m_nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
+  size_t bc_ts_check_window = m_db->height() > adjust_height ? static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_ADJUST) : static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
   if(timestamps.size() >= bc_ts_check_window)	  
     return true;
 
@@ -1778,11 +1784,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     const uint64_t prev_height = alt_chain.size() ? it_prev->second.height : m_db->get_block_height(b.prev_id);
     bei.height = prev_height + 1;
     uint64_t block_reward = get_outs_money_amount(b.miner_tx);
-//    bei.already_generated_coins = block_reward + (alt_chain.size() ? it_prev->second.already_generated_coins : m_db->get_block_already_generated_coins(prev_height));
-    if (prev_height >= DIFFICULTY_ADJUST_HEIGHT - 1)
-      bei.already_generated_coins = it_prev->second.already_generated_coins;
-    else
-      bei.already_generated_coins = block_reward + (alt_chain.size() ? it_prev->second.already_generated_coins : m_db->get_block_already_generated_coins(prev_height));
+    bei.already_generated_coins = block_reward + (alt_chain.size() ? it_prev->second.already_generated_coins : m_db->get_block_already_generated_coins(prev_height));
 
     // verify that the block's timestamp is within the acceptable range
     // (not earlier than the median of the last X blocks)
@@ -3534,7 +3536,8 @@ bool Blockchain::check_block_timestamp(const block& b, uint64_t& median_ts) cons
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 //  if(b.timestamp > get_adjusted_time() + CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT)
-  uint64_t block_ftl = m_db->height() > DIFFICULTY_ADJUST_HEIGHT ? static_cast<size_t>(BLOCK_FUTURE_TIME_LIMIT_ADJUST) : static_cast<size_t>(CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT);
+  uint64_t adjust_height = m_nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
+  uint64_t block_ftl = m_db->height() > adjust_height ? static_cast<size_t>(BLOCK_FUTURE_TIME_LIMIT_ADJUST) : static_cast<size_t>(CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT);
   if(b.timestamp > get_adjusted_time() + block_ftl)	  
   {
     MERROR_VER("Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", bigger than adjusted time + 2 hours");
@@ -3545,7 +3548,7 @@ bool Blockchain::check_block_timestamp(const block& b, uint64_t& median_ts) cons
 
   // if not enough blocks, no proper median yet, return true
 //  if(h < BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW)
-  size_t bc_ts_check_window = m_db->height() > DIFFICULTY_ADJUST_HEIGHT ? static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_ADJUST) : static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
+  size_t bc_ts_check_window = m_db->height() > adjust_height ? static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_ADJUST) : static_cast<size_t>(BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
   if(m_db->height() < bc_ts_check_window)	  
   {
     return true;
