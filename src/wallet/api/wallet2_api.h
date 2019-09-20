@@ -594,16 +594,16 @@ struct Wallet
     virtual ConnectionStatus connected() const = 0;
     virtual void setTrustedDaemon(bool arg) = 0;
     virtual bool trustedDaemon() const = 0;
-    virtual uint64_t balance(uint32_t accountIndex = 0) const = 0;
-    uint64_t balanceAll() const {
-        uint64_t result = 0;
+    virtual xmc_int balance(uint32_t accountIndex = 0) const = 0;
+    xmc_int balanceAll() const {
+        xmc_int result = 0;
         for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
             result += balance(i);
         return result;
     }
-    virtual uint64_t unlockedBalance(uint32_t accountIndex = 0) const = 0;
-    uint64_t unlockedBalanceAll() const {
-        uint64_t result = 0;
+    virtual xmc_int unlockedBalance(uint32_t accountIndex = 0) const = 0;
+    xmc_int unlockedBalanceAll() const {
+        xmc_int result = 0;
         for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
             result += unlockedBalance(i);
         return result;
