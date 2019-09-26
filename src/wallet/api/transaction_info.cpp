@@ -37,7 +37,8 @@ namespace Monero {
 
 TransactionInfo::~TransactionInfo() {}
 
-TransactionInfo::Transfer::Transfer(uint64_t _amount, const string &_address)
+// TransactionInfo::Transfer::Transfer(uint64_t _amount, const string &_address)
+TransactionInfo::Transfer::Transfer(double _amount, const string &_address)
     : amount(_amount), address(_address) {}
 
 

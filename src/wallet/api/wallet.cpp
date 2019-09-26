@@ -50,6 +50,11 @@
 #include <boost/filesystem.hpp>
 #endif
 
+//FIXED BY TOINTS
+#include <boost/multiprecision/cpp_dec_float.hpp>
+typedef boost::multiprecision::cpp_dec_float_50 xmc_float;
+static xmc_float XMC_UNIT = 1000000000000.0;
+
 using namespace std;
 using namespace cryptonote;
 
@@ -157,7 +162,8 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
         }
     }
 
-    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time)
+//    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time)
+    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, double amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time)
     {
 
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
@@ -173,7 +179,8 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
         }
     }
 
-    virtual void on_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index)
+//    virtual void on_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index)
+    virtual void on_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, double amount, const cryptonote::subaddress_index& subaddr_index)
     {
 
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
@@ -190,7 +197,8 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
     }
 
     virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx,
-                                uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index)
+//                                uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index)
+                                double amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index)
     {
         // TODO;
         std::string tx_hash = epee::string_tools::pod_to_hex(txid);
@@ -218,7 +226,8 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
       }
     }
 
-    virtual void on_lw_money_received(uint64_t height, const crypto::hash &txid, uint64_t amount)
+//    virtual void on_lw_money_received(uint64_t height, const crypto::hash &txid, uint64_t amount)
+    virtual void on_lw_money_received(uint64_t height, const crypto::hash &txid, double amount)
     {
       if (m_listener) {
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
@@ -226,7 +235,8 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
       }
     }
 
-    virtual void on_lw_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, uint64_t amount)
+//    virtual void on_lw_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, uint64_t amount)
+    virtual void on_lw_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, double amount)
     {
       if (m_listener) {
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
@@ -234,7 +244,8 @@ struct Wallet2CallbackImpl : public tools::i_wallet2_callback
       }
     }
 
-    virtual void on_lw_money_spent(uint64_t height, const crypto::hash &txid, uint64_t amount)
+//    virtual void on_lw_money_spent(uint64_t height, const crypto::hash &txid, uint64_t amount)
+    virtual void on_lw_money_spent(uint64_t height, const crypto::hash &txid, double amount)
     {
       if (m_listener) {
         std::string tx_hash =  epee::string_tools::pod_to_hex(txid);
@@ -294,19 +305,22 @@ Wallet::~Wallet() {}
 WalletListener::~WalletListener() {}
 
 
-string Wallet::displayAmount(uint64_t amount)
+// string Wallet::displayAmount(uint64_t amount)
+string Wallet::displayAmount(double amount)
 {
     return cryptonote::print_money(amount);
 }
 
-uint64_t Wallet::amountFromString(const string &amount)
+// uint64_t Wallet::amountFromString(const string &amount)
+double Wallet::amountFromString(const string &amount)
 {
     uint64_t result = 0;
     cryptonote::parse_amount(result, amount);
     return result;
 }
 
-uint64_t Wallet::amountFromDouble(double amount)
+// uint64_t Wallet::amountFromDouble(double amount)
+double Wallet::amountFromDouble(double amount)
 {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(CRYPTONOTE_DISPLAY_DECIMAL_POINT) << amount;
@@ -383,9 +397,11 @@ std::string Wallet::paymentIdFromAddress(const std::string &str, NetworkType net
   return epee::string_tools::pod_to_hex(info.payment_id);
 }
 
-uint64_t Wallet::maximumAllowedAmount()
+// uint64_t Wallet::maximumAllowedAmount()
+double Wallet::maximumAllowedAmount()
 {
-    return std::numeric_limits<uint64_t>::max();
+//    return std::numeric_limits<uint64_t>::max();
+    return std::numeric_limits<double>::max();
 }
 
 void Wallet::init(const char *argv0, const char *default_log_base_name, const std::string &log_path, bool console) {
@@ -946,6 +962,30 @@ bool WalletImpl::lightWalletLogin(bool &isNewWallet) const
   return m_wallet->light_wallet_login(isNewWallet);
 }
 
+bool WalletImpl::lightWalletImportWalletRequest(std::string &payment_id, double &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status)
+{
+  try
+  {
+    tools::COMMAND_RPC_IMPORT_WALLET_REQUEST::response response;
+    if(!m_wallet->light_wallet_import_wallet_request(response)){
+      setStatusError(tr("Failed to send import wallet request"));
+      return false;
+    }
+    fee = response.import_fee;
+    payment_id = response.payment_id;
+    new_request = response.new_request;
+    request_fulfilled = response.request_fulfilled;
+    payment_address = response.payment_address;
+    status = response.status;
+  }
+  catch (const std::exception &e)
+  {
+    LOG_ERROR("Error sending import wallet request: " << e.what());
+    setStatusError(e.what());
+    return false;
+  }
+  return true;
+}
 bool WalletImpl::lightWalletImportWalletRequest(std::string &payment_id, uint64_t &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status)
 {
   try
@@ -991,14 +1031,26 @@ void WalletImpl::setSubaddressLookahead(uint32_t major, uint32_t minor)
     m_wallet->set_subaddress_lookahead(major, minor);
 }
 
-xmc_int WalletImpl::balance(uint32_t accountIndex) const
+// xmc_int WalletImpl::balance(uint32_t accountIndex) const
+double WalletImpl::balance(uint32_t accountIndex) const
 {
-    return m_wallet->balance(accountIndex);
+    xmc_int balance_xmc_int = m_wallet->balance(accountIndex);
+    xmc_float balance_float = balance_xmc_int.convert_to<xmc_float>();
+    xmc_float div_balance = balance_float / XMC_UNIT;
+    double ret = div_balance.convert_to<double>();
+    return ret;
+//    return m_wallet->balance(accountIndex);
 }
 
-xmc_int WalletImpl::unlockedBalance(uint32_t accountIndex) const
+// xmc_int WalletImpl::unlockedBalance(uint32_t accountIndex) const
+double WalletImpl::unlockedBalance(uint32_t accountIndex) const
 {
-    return m_wallet->unlocked_balance(accountIndex);
+    xmc_int balance_xmc_int = m_wallet->unlocked_balance(accountIndex);
+    xmc_float balance_float = balance_xmc_int.convert_to<xmc_float>();
+    xmc_float div_balance = balance_float / XMC_UNIT;
+    double ret = div_balance.convert_to<double>();
+    return ret;
+//    return m_wallet->unlocked_balance(accountIndex);
 }
 
 uint64_t WalletImpl::blockChainHeight() const
@@ -1407,7 +1459,8 @@ PendingTransaction* WalletImpl::restoreMultisigTransaction(const string& signDat
 //    - unconfirmed_transfer_details;
 //    - confirmed_transfer_details)
 
-PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const string &payment_id, optional<uint64_t> amount, uint32_t mixin_count,
+// PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const string &payment_id, optional<uint64_t> amount, uint32_t mixin_count,
+PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const string &payment_id, optional<double> amount, uint32_t mixin_count,
                                                   PendingTransaction::Priority priority, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices)
 
 {
@@ -1540,7 +1593,8 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
         } catch (const tools::error::not_enough_outs_to_mix& e) {
             std::ostringstream writer;
             writer << tr("not enough outputs for specified ring size") << " = " << (e.mixin_count() + 1) << ":";
-            for (const std::pair<uint64_t, uint64_t> outs_for_amount : e.scanty_outs()) {
+//            for (const std::pair<uint64_t, uint64_t> outs_for_amount : e.scanty_outs()) {
+	    for (const std::pair<double, double> outs_for_amount : e.scanty_outs()) {
                 writer << "\n" << tr("output amount") << " = " << print_money(outs_for_amount.first) << ", " << tr("found outputs to use") << " = " << outs_for_amount.second;
             }
             writer << "\n" << tr("Please sweep unmixable outputs.");
@@ -1625,7 +1679,8 @@ PendingTransaction *WalletImpl::createSweepUnmixableTransaction()
         } catch (const tools::error::not_enough_outs_to_mix& e) {
             std::ostringstream writer;
             writer << tr("not enough outputs for specified ring size") << " = " << (e.mixin_count() + 1) << ":";
-            for (const std::pair<uint64_t, uint64_t> outs_for_amount : e.scanty_outs()) {
+//            for (const std::pair<uint64_t, uint64_t> outs_for_amount : e.scanty_outs()) {
+            for (const std::pair<double, double> outs_for_amount : e.scanty_outs()) {
                 writer << "\n" << tr("output amount") << " = " << print_money(outs_for_amount.first) << ", " << tr("found outputs to use") << " = " << outs_for_amount.second;
             }
             setStatusError(writer.str());
@@ -1892,7 +1947,8 @@ bool WalletImpl::checkSpendProof(const std::string &txid_str, const std::string 
     }
 }
 
-std::string WalletImpl::getReserveProof(bool all, uint32_t account_index, uint64_t amount, const std::string &message) const {
+// std::string WalletImpl::getReserveProof(bool all, uint32_t account_index, uint64_t amount, const std::string &message) const {
+std::string WalletImpl::getReserveProof(bool all, uint32_t account_index, double amount, const std::string &message) const {
     try
     {
         clearStatus();
@@ -2209,7 +2265,8 @@ bool WalletImpl::doInit(const string &daemon_address, uint64_t upper_transaction
     return true;
 }
 
-bool WalletImpl::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
+// bool WalletImpl::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
+bool WalletImpl::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, double &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
 {
     return m_wallet->parse_uri(uri, address, payment_id, amount, tx_description, recipient_name, unknown_parameters, error);
 }
@@ -2251,12 +2308,15 @@ bool WalletImpl::blackballOutputs(const std::vector<std::string> &outputs, bool 
 {
     std::vector<std::pair<uint64_t, uint64_t>> raw_outputs;
     raw_outputs.reserve(outputs.size());
-    uint64_t amount = std::numeric_limits<uint64_t>::max(), offset, num_offsets;
+//    uint64_t amount = std::numeric_limits<uint64_t>::max(), offset, num_offsets;
+    double amount = std::numeric_limits<double>::max();
+    uint64_t offset, num_offsets;
     for (const std::string &str: outputs)
     {
         if (sscanf(str.c_str(), "@%" PRIu64, &amount) == 1)
           continue;
-        if (amount == std::numeric_limits<uint64_t>::max())
+//        if (amount == std::numeric_limits<uint64_t>::max())
+        if (amount == std::numeric_limits<double>::max())
         {
           setStatusError("First line is not an amount");
           return true;
@@ -2287,7 +2347,9 @@ bool WalletImpl::blackballOutputs(const std::vector<std::string> &outputs, bool 
 
 bool WalletImpl::blackballOutput(const std::string &amount, const std::string &offset)
 {
-    uint64_t raw_amount, raw_offset;
+//    uint64_t raw_amount, raw_offset;
+    double raw_amount;
+    uint64_t raw_offset;
     if (!epee::string_tools::get_xtype_from_string(raw_amount, amount))
     {
         setStatusError(tr("Failed to parse output amount"));
@@ -2309,7 +2371,9 @@ bool WalletImpl::blackballOutput(const std::string &amount, const std::string &o
 
 bool WalletImpl::unblackballOutput(const std::string &amount, const std::string &offset)
 {
-    uint64_t raw_amount, raw_offset;
+//    uint64_t raw_amount, raw_offset;
+    double raw_amount;
+    uint64_t raw_offset;
     if (!epee::string_tools::get_xtype_from_string(raw_amount, amount))
     {
         setStatusError(tr("Failed to parse output amount"));

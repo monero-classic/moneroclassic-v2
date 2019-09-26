@@ -38,6 +38,8 @@
 #include <ctime>
 #include <iostream>
 #include <stdexcept>
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_int xmc_int;
 
 //  Public interface for libwallet library
 namespace Monero {
@@ -173,8 +175,10 @@ struct TransactionInfo
     };
 
     struct Transfer {
-        Transfer(uint64_t _amount, const std::string &address);
-        const uint64_t amount;
+//        Transfer(uint64_t _amount, const std::string &address);
+//        const uint64_t amount;
+        Transfer(double _amount, const std::string &address);
+        const double amount;
         const std::string address;
     };
 
@@ -347,21 +351,24 @@ struct WalletListener
      * @param txId       - transaction id
      * @param amount     - amount
      */
-    virtual void moneySpent(const std::string &txId, uint64_t amount) = 0;
+//    virtual void moneySpent(const std::string &txId, uint64_t amount) = 0;
+    virtual void moneySpent(const std::string &txId, double amount) = 0;
 
     /**
      * @brief moneyReceived - called when money received
      * @param txId          - transaction id
      * @param amount        - amount
      */
-    virtual void moneyReceived(const std::string &txId, uint64_t amount) = 0;
+//    virtual void moneyReceived(const std::string &txId, uint64_t amount) = 0;
+    virtual void moneyReceived(const std::string &txId, double amount) = 0;
     
    /**
     * @brief unconfirmedMoneyReceived - called when payment arrived in tx pool
     * @param txId          - transaction id
     * @param amount        - amount
     */
-    virtual void unconfirmedMoneyReceived(const std::string &txId, uint64_t amount) = 0;
+//    virtual void unconfirmedMoneyReceived(const std::string &txId, uint64_t amount) = 0;
+    virtual void unconfirmedMoneyReceived(const std::string &txId, double amount) = 0;
 
     /**
      * @brief newBlock      - called when new block received
@@ -594,16 +601,22 @@ struct Wallet
     virtual ConnectionStatus connected() const = 0;
     virtual void setTrustedDaemon(bool arg) = 0;
     virtual bool trustedDaemon() const = 0;
-    virtual xmc_int balance(uint32_t accountIndex = 0) const = 0;
-    xmc_int balanceAll() const {
-        xmc_int result = 0;
+//    virtual xmc_int balance(uint32_t accountIndex = 0) const = 0;
+//    xmc_int balanceAll() const {
+//        xmc_int result = 0;
+    virtual double balance(uint32_t accountIndex = 0) const = 0;
+    double balanceAll() const {
+        double result = 0.0;
         for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
             result += balance(i);
         return result;
     }
-    virtual xmc_int unlockedBalance(uint32_t accountIndex = 0) const = 0;
-    xmc_int unlockedBalanceAll() const {
-        xmc_int result = 0;
+//    virtual xmc_int unlockedBalance(uint32_t accountIndex = 0) const = 0;
+//    xmc_int unlockedBalanceAll() const {
+//        xmc_int result = 0;
+    virtual double unlockedBalance(uint32_t accountIndex = 0) const = 0;
+    double unlockedBalanceAll() const {
+        double result = 0.0;
         for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
             result += unlockedBalance(i);
         return result;
@@ -653,9 +666,12 @@ struct Wallet
      */
     virtual bool synchronized() const = 0;
 
-    static std::string displayAmount(uint64_t amount);
-    static uint64_t amountFromString(const std::string &amount);
-    static uint64_t amountFromDouble(double amount);
+//    static std::string displayAmount(uint64_t amount);
+//    static uint64_t amountFromString(const std::string &amount);
+//    static uint64_t amountFromDouble(double amount);
+    static std::string displayAmount(double amount);
+    static double amountFromString(const std::string &amount);
+    static double amountFromDouble(double amount);
     static std::string genPaymentId();
     static bool paymentIdValid(const std::string &paiment_id);
     static bool addressValid(const std::string &str, NetworkType nettype);
@@ -673,7 +689,9 @@ struct Wallet
     {
         return paymentIdFromAddress(str, testnet ? TESTNET : MAINNET);
     }
-    static uint64_t maximumAllowedAmount();
+//    static uint64_t maximumAllowedAmount();
+    static double maximumAllowedAmount();
+
     // Easylogger wrapper
     static void init(const char *argv0, const char *default_log_base_name) { init(argv0, default_log_base_name, "", true); }
     static void init(const char *argv0, const char *default_log_base_name, const std::string &log_path, bool console);
@@ -826,7 +844,8 @@ struct Wallet
      */
 
     virtual PendingTransaction * createTransaction(const std::string &dst_addr, const std::string &payment_id,
-                                                   optional<uint64_t> amount, uint32_t mixin_count,
+//                                                   optional<uint64_t> amount, uint32_t mixin_count,
+						   optional<double> amount, uint32_t mixin_count,
                                                    PendingTransaction::Priority = PendingTransaction::Priority_Low,
                                                    uint32_t subaddr_account = 0,
                                                    std::set<uint32_t> subaddr_indices = {}) = 0;
@@ -913,7 +932,8 @@ struct Wallet
      * \brief getReserveProof - Generates a proof that proves the reserve of unspent funds
      *                          Parameters `account_index` and `amount` are ignored when `all` is true
      */
-    virtual std::string getReserveProof(bool all, uint32_t account_index, uint64_t amount, const std::string &message) const = 0;
+//    virtual std::string getReserveProof(bool all, uint32_t account_index, uint64_t amount, const std::string &message) const = 0;
+    virtual std::string getReserveProof(bool all, uint32_t account_index, double amount, const std::string &message) const = 0;
     virtual bool checkReserveProof(const std::string &address, const std::string &message, const std::string &signature, bool &good, uint64_t &total, uint64_t &spent) const = 0;
 
     /*
@@ -946,7 +966,9 @@ struct Wallet
      */
     virtual bool verifyMessageWithPublicKey(const std::string &message, const std::string &publicKey, const std::string &signature) const = 0;
 
-    virtual bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error) = 0;
+//    virtual bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error) = 0;
+    virtual bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, double &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error) = 0;
+
 
     virtual std::string getDefaultDataDir() const = 0;
    
@@ -985,9 +1007,11 @@ struct Wallet
 
     //! Light wallet authenticate and login
     virtual bool lightWalletLogin(bool &isNewWallet) const = 0;
+
     
     //! Initiates a light wallet import wallet request
-    virtual bool lightWalletImportWalletRequest(std::string &payment_id, uint64_t &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status) = 0;
+//    virtual bool lightWalletImportWalletRequest(std::string &payment_id, uint64_t &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status) = 0;
+    virtual bool lightWalletImportWalletRequest(std::string &payment_id, double &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status) = 0;
 
     //! locks/unlocks the keys file; returns true on success
     virtual bool lockKeysFile() = 0;

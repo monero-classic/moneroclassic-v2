@@ -384,6 +384,41 @@ namespace cryptonote
     return string_tools::get_xtype_from_string(amount, str_amount);
   }
   //---------------------------------------------------------------
+  bool parse_amount(double& amount, const std::string& str_amount_)
+  {
+    std::string str_amount = str_amount_;
+    boost::algorithm::trim(str_amount);
+
+    size_t point_index = str_amount.find_first_of('.');
+    size_t fraction_size;
+    if (std::string::npos != point_index)
+    {
+      fraction_size = str_amount.size() - point_index - 1;
+      while (default_decimal_point < fraction_size && '0' == str_amount.back())
+      {
+        str_amount.erase(str_amount.size() - 1, 1);
+        --fraction_size;
+      }
+      if (default_decimal_point < fraction_size)
+        return false;
+      str_amount.erase(point_index, 1);
+    }
+    else
+    {
+      fraction_size = 0;
+    }
+
+    if (str_amount.empty())
+      return false;
+
+    if (fraction_size < default_decimal_point)
+    {
+      str_amount.append(default_decimal_point - fraction_size, '0');
+    }
+
+    return string_tools::get_xtype_from_string(amount, str_amount);
+  }
+  //---------------------------------------------------------------
   uint64_t get_transaction_weight(const transaction &tx, size_t blob_size)
   {
     if (tx.version < 2)
@@ -970,6 +1005,13 @@ namespace cryptonote
       s.insert(s.size() - decimal_point, ".");
     return s;
   }
+
+  std::string print_money(double amount)
+  {
+    std::string s = std::to_string(amount);
+    return s;
+  }
+
   //---------------------------------------------------------------
   crypto::hash get_blob_hash(const blobdata& blob)
   {

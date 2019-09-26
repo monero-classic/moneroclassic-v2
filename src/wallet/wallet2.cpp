@@ -1708,7 +1708,8 @@ void wallet2::scan_output(const cryptonote::transaction &tx, bool miner_tx, cons
     return;
   }
   outs.push_back(i);
-  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<uint64_t>::max() - tx_scan_info.money_transfered,
+//  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<uint64_t>::max() - tx_scan_info.money_transfered,
+  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<double>::max() - tx_scan_info.money_transfered,
       error::wallet_internal_error, "Overflow in received amounts");
   tx_money_got_in_outs[tx_scan_info.received->index] += tx_scan_info.money_transfered;
   tx_scan_info.amount = tx_scan_info.money_transfered;
@@ -2055,8 +2056,10 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
               error::wallet_internal_error, "Unexpected values of new and old outputs");
           tx_money_got_in_outs[tx_scan_info[o].received->index] -= m_transfers[kit->second].amount();
 
-          uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
-          uint64_t extra_amount = amount - m_transfers[kit->second].amount();
+//          uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
+//          uint64_t extra_amount = amount - m_transfers[kit->second].amount();
+          double amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
+          double extra_amount = amount - m_transfers[kit->second].amount();
           if (!pool)
           {
             transfer_details &td = m_transfers[kit->second];
@@ -2183,7 +2186,8 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     }
   }
 
-  uint64_t fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
+//  uint64_t fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
+  double fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
 
   if (tx_money_spent_in_ins > 0 && !pool)
   {
@@ -12687,7 +12691,8 @@ std::string wallet2::decrypt_with_view_secret_key(const std::string &ciphertext,
   return decrypt(ciphertext, get_account().get_keys().m_view_secret_key, authenticated);
 }
 //----------------------------------------------------------------------------------------------------
-std::string wallet2::make_uri(const std::string &address, const std::string &payment_id, uint64_t amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const
+// std::string wallet2::make_uri(const std::string &address, const std::string &payment_id, uint64_t amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const
+std::string wallet2::make_uri(const std::string &address, const std::string &payment_id, double amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const
 {
   cryptonote::address_parse_info info;
   if(!get_account_address_from_str(info, nettype(), address))
@@ -12741,6 +12746,89 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
 }
 //----------------------------------------------------------------------------------------------------
 bool wallet2::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
+{
+  if (uri.substr(0, 7) != "monero:")
+  {
+    error = std::string("URI has wrong scheme (expected \"monero:\"): ") + uri;
+    return false;
+  }
+
+  std::string remainder = uri.substr(7);
+  const char *ptr = strchr(remainder.c_str(), '?');
+  address = ptr ? remainder.substr(0, ptr-remainder.c_str()) : remainder;
+
+  cryptonote::address_parse_info info;
+  if(!get_account_address_from_str(info, nettype(), address))
+  {
+    error = std::string("URI has wrong address: ") + address;
+    return false;
+  }
+  if (!strchr(remainder.c_str(), '?'))
+    return true;
+
+  std::vector<std::string> arguments;
+  std::string body = remainder.substr(address.size() + 1);
+  if (body.empty())
+    return true;
+  boost::split(arguments, body, boost::is_any_of("&"));
+  std::set<std::string> have_arg;
+  for (const auto &arg: arguments)
+  {
+    std::vector<std::string> kv;
+    boost::split(kv, arg, boost::is_any_of("="));
+    if (kv.size() != 2)
+    {
+      error = std::string("URI has wrong parameter: ") + arg;
+      return false;
+    }
+    if (have_arg.find(kv[0]) != have_arg.end())
+    {
+      error = std::string("URI has more than one instance of " + kv[0]);
+      return false;
+    }
+    have_arg.insert(kv[0]);
+
+    if (kv[0] == "tx_amount")
+    {
+      amount = 0;
+      if (!cryptonote::parse_amount(amount, kv[1]))
+      {
+        error = std::string("URI has invalid amount: ") + kv[1];
+        return false;
+      }
+    }
+    else if (kv[0] == "tx_payment_id")
+    {
+      if (info.has_payment_id)
+      {
+        error = "Separate payment id given with an integrated address";
+        return false;
+      }
+      crypto::hash hash;
+      if (!wallet2::parse_long_payment_id(kv[1], hash))
+      {
+        error = "Invalid payment id: " + kv[1];
+        return false;
+      }
+      payment_id = kv[1];
+    }
+    else if (kv[0] == "recipient_name")
+    {
+      recipient_name = epee::net_utils::convert_from_url_format(kv[1]);
+    }
+    else if (kv[0] == "tx_description")
+    {
+      tx_description = epee::net_utils::convert_from_url_format(kv[1]);
+    }
+    else
+    {
+      unknown_parameters.push_back(arg);
+    }
+  }
+  return true;
+}
+//----------------------------------------------------------------------------------------------------
+bool wallet2::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, double &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
 {
   if (uri.substr(0, 7) != "monero:")
   {
