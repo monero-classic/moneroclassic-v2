@@ -107,10 +107,8 @@ public:
     ConnectionStatus connected() const override;
     void setTrustedDaemon(bool arg) override;
     bool trustedDaemon() const override;
-//    xmc_int balance(uint32_t accountIndex = 0) const override;
-//    xmc_int unlockedBalance(uint32_t accountIndex = 0) const override;
-    double balance(uint32_t accountIndex = 0) const override;
-    double unlockedBalance(uint32_t accountIndex = 0) const override;
+    xmc_int balance(uint32_t accountIndex = 0) const override;
+    xmc_int unlockedBalance(uint32_t accountIndex = 0) const override;
     uint64_t blockChainHeight() const override;
     uint64_t approximateBlockChainHeight() const override;
     uint64_t estimateBlockChainHeight() const override;
@@ -152,7 +150,7 @@ public:
     PendingTransaction*  restoreMultisigTransaction(const std::string& signData) override;
 
     PendingTransaction * createTransaction(const std::string &dst_addr, const std::string &payment_id,
-                                        optional<double> amount, uint32_t mixin_count,
+                                        optional<uint64_t> amount, uint32_t mixin_count,
                                         PendingTransaction::Priority priority = PendingTransaction::Priority_Low,
                                         uint32_t subaddr_account = 0,
                                         std::set<uint32_t> subaddr_indices = {}) override;
@@ -178,7 +176,7 @@ public:
     virtual bool checkTxProof(const std::string &txid, const std::string &address, const std::string &message, const std::string &signature, bool &good, uint64_t &received, bool &in_pool, uint64_t &confirmations) override;
     virtual std::string getSpendProof(const std::string &txid, const std::string &message) const override;
     virtual bool checkSpendProof(const std::string &txid, const std::string &message, const std::string &signature, bool &good) const override;
-//    virtual std::string getReserveProof(bool all, uint32_t account_index, uint64_t amount, const std::string &message) const override;
+    virtual std::string getReserveProof(bool all, uint32_t account_index, uint64_t amount, const std::string &message) const override;
     virtual std::string getReserveProof(bool all, uint32_t account_index, double amount, const std::string &message) const override;
     virtual bool checkReserveProof(const std::string &address, const std::string &message, const std::string &signature, bool &good, uint64_t &total, uint64_t &spent) const override;
     virtual std::string signMessage(const std::string &message) override;
@@ -187,11 +185,11 @@ public:
     virtual bool verifyMessageWithPublicKey(const std::string &message, const std::string &publicKey, const std::string &signature) const override;
     virtual void startRefresh() override;
     virtual void pauseRefresh() override;
-//    virtual bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error) override;
+    virtual bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error) override;
     virtual bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, double &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error) override;
     virtual std::string getDefaultDataDir() const override;
     virtual bool lightWalletLogin(bool &isNewWallet) const override;
-//    virtual bool lightWalletImportWalletRequest(std::string &payment_id, uint64_t &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status) override;
+    virtual bool lightWalletImportWalletRequest(std::string &payment_id, uint64_t &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status) override;
     virtual bool lightWalletImportWalletRequest(std::string &payment_id, double &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status) override;
     virtual bool blackballOutputs(const std::vector<std::string> &outputs, bool add) override;
     virtual bool blackballOutput(const std::string &amount, const std::string &offset) override;

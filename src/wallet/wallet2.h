@@ -1208,7 +1208,7 @@ private:
     template<typename T=std::string> T decrypt(const std::string &ciphertext, const crypto::secret_key &skey, bool authenticated = true) const;
     std::string decrypt_with_view_secret_key(const std::string &ciphertext, bool authenticated = true) const;
 
-//    std::string make_uri(const std::string &address, const std::string &payment_id, uint64_t amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const;
+    std::string make_uri(const std::string &address, const std::string &payment_id, uint64_t amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const;
     std::string make_uri(const std::string &address, const std::string &payment_id, double amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const;
     bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, double &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error);
     bool parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error);
@@ -1787,8 +1787,7 @@ namespace boost
         // v<6 may not have change accumulated in m_amount_out, which is a pain,
         // as it's readily understood to be sum of outputs.
         // We convert it to include change from v6
-//        if (!typename Archive::is_saving() && x.m_change != (uint64_t)-1)
-	if (!typename Archive::is_saving() && x.m_change != std::numeric_limits<double>::max())
+        if (!typename Archive::is_saving() && x.m_change != (uint64_t)-1)
           x.m_amount_out += x.m_change;
       }
       if (ver < 7)

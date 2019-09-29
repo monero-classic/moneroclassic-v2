@@ -157,10 +157,8 @@ void TransactionHistoryImpl::refresh()
         const crypto::hash &hash = i->first;
         const tools::wallet2::confirmed_transfer_details &pd = i->second;
         
- //       uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change; // change may not be known
- //       uint64_t fee = pd.m_amount_in - pd.m_amount_out;
-        double change = pd.m_change == std::numeric_limits<double>::max() ? 0 : pd.m_change; // change may not be known
-        double fee = pd.m_amount_in - pd.m_amount_out;
+        uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change; // change may not be known
+        uint64_t fee = pd.m_amount_in - pd.m_amount_out;
 
         std::string payment_id = string_tools::pod_to_hex(i->second.m_payment_id);
         if (payment_id.substr(16).find_first_not_of('0') == std::string::npos)

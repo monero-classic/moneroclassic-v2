@@ -65,10 +65,8 @@ private:
     int         m_direction;
     bool        m_pending;
     bool        m_failed;
-//    uint64_t    m_amount;
-//    uint64_t    m_fee;
-    double      m_amount;
-    double      m_fee;
+    uint64_t    m_amount;
+    uint64_t    m_fee;
     uint64_t    m_blockheight;
     std::set<uint32_t> m_subaddrIndex;        // always unique index for incoming transfers; can be multiple indices for outgoing transfers
     uint32_t m_subaddrAccount;

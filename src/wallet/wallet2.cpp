@@ -1708,8 +1708,7 @@ void wallet2::scan_output(const cryptonote::transaction &tx, bool miner_tx, cons
     return;
   }
   outs.push_back(i);
-//  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<uint64_t>::max() - tx_scan_info.money_transfered,
-  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<double>::max() - tx_scan_info.money_transfered,
+  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<uint64_t>::max() - tx_scan_info.money_transfered,
       error::wallet_internal_error, "Overflow in received amounts");
   tx_money_got_in_outs[tx_scan_info.received->index] += tx_scan_info.money_transfered;
   tx_scan_info.amount = tx_scan_info.money_transfered;
@@ -2056,10 +2055,8 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
               error::wallet_internal_error, "Unexpected values of new and old outputs");
           tx_money_got_in_outs[tx_scan_info[o].received->index] -= m_transfers[kit->second].amount();
 
-//          uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
-//          uint64_t extra_amount = amount - m_transfers[kit->second].amount();
-          double amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
-          double extra_amount = amount - m_transfers[kit->second].amount();
+          uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
+          uint64_t extra_amount = amount - m_transfers[kit->second].amount();
           if (!pool)
           {
             transfer_details &td = m_transfers[kit->second];
@@ -2186,8 +2183,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     }
   }
 
-//  uint64_t fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
-  double fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
+  uint64_t fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
 
   if (tx_money_spent_in_ins > 0 && !pool)
   {
@@ -12691,7 +12687,59 @@ std::string wallet2::decrypt_with_view_secret_key(const std::string &ciphertext,
   return decrypt(ciphertext, get_account().get_keys().m_view_secret_key, authenticated);
 }
 //----------------------------------------------------------------------------------------------------
-// std::string wallet2::make_uri(const std::string &address, const std::string &payment_id, uint64_t amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const
+std::string wallet2::make_uri(const std::string &address, const std::string &payment_id, uint64_t amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const
+{
+  cryptonote::address_parse_info info;
+  if(!get_account_address_from_str(info, nettype(), address))
+  {
+    error = std::string("wrong address: ") + address;
+    return std::string();
+  }
+
+  // we want only one payment id
+  if (info.has_payment_id && !payment_id.empty())
+  {
+    error = "A single payment id is allowed";
+    return std::string();
+  }
+
+  if (!payment_id.empty())
+  {
+    crypto::hash pid32;
+    if (!wallet2::parse_long_payment_id(payment_id, pid32))
+    {
+      error = "Invalid payment id";
+      return std::string();
+    }
+  }
+
+  std::string uri = "monero:" + address;
+  unsigned int n_fields = 0;
+
+  if (!payment_id.empty())
+  {
+    uri += (n_fields++ ? "&" : "?") + std::string("tx_payment_id=") + payment_id;
+  }
+
+  if (amount > 0)
+  {
+    // URI encoded amount is in decimal units, not atomic units
+    uri += (n_fields++ ? "&" : "?") + std::string("tx_amount=") + cryptonote::print_money(amount);
+  }
+
+  if (!recipient_name.empty())
+  {
+    uri += (n_fields++ ? "&" : "?") + std::string("recipient_name=") + epee::net_utils::conver_to_url_format(recipient_name);
+  }
+
+  if (!tx_description.empty())
+  {
+    uri += (n_fields++ ? "&" : "?") + std::string("tx_description=") + epee::net_utils::conver_to_url_format(tx_description);
+  }
+
+  return uri;
+}
+
 std::string wallet2::make_uri(const std::string &address, const std::string &payment_id, double amount, const std::string &tx_description, const std::string &recipient_name, std::string &error) const
 {
   cryptonote::address_parse_info info;
