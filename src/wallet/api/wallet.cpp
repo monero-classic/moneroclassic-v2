@@ -50,11 +50,6 @@
 #include <boost/filesystem.hpp>
 #endif
 
-//FIXED BY TOINTS
-#include <boost/multiprecision/cpp_dec_float.hpp>
-typedef boost::multiprecision::cpp_dec_float_50 xmc_float;
-static xmc_float XMC_UNIT = 1000000000000.0;
-
 using namespace std;
 using namespace cryptonote;
 

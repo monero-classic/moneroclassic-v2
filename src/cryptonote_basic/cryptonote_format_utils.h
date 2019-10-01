@@ -143,6 +143,7 @@ namespace cryptonote
   std::string print_money(uint64_t amount, unsigned int decimal_point = -1);
   std::string print_money(xmc_int amount, unsigned int decimal_point = -1);
   std::string print_money(double amount);
+  double xmc_int_to_double(xmc_int amount);
   //---------------------------------------------------------------
   template<class t_object>
   bool t_serializable_object_from_blob(t_object& to, const blobdata& b_blob)
