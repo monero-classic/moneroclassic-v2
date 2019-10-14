@@ -45,9 +45,12 @@ public:
     ~UnsignedTransactionImpl();
     int status() const override;
     std::string errorString() const override;
-    std::vector<uint64_t> amount() const override;
-    std::vector<uint64_t> fee() const override;
-    std::vector<uint64_t> mixin() const override;
+//    std::vector<uint64_t> amount() const override;
+//    std::vector<uint64_t> fee() const override;
+//    std::vector<uint64_t> mixin() const override;
+    virtual std::vector<uint64_t> amount() const override;
+    virtual std::vector<uint64_t> fee() const override;
+    virtual std::vector<uint64_t> mixin() const override;
     std::vector<std::string> paymentId() const override;
     std::vector<std::string> recipientAddress() const override;
     uint64_t txCount() const override;

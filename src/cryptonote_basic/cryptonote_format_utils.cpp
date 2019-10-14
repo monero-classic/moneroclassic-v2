@@ -39,6 +39,14 @@
 #include "crypto/hash.h"
 #include "ringct/rctSigs.h"
 
+#include <boost/multiprecision/cpp_dec_float.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+
+typedef boost::multiprecision::cpp_dec_float_50 xmc_float;
+typedef boost::multiprecision::cpp_int xmc_int;
+static xmc_float XMC_UINT = 1000000000000.0;
+
 using namespace epee;
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -350,6 +358,41 @@ namespace cryptonote
   }
   //---------------------------------------------------------------
   bool parse_amount(uint64_t& amount, const std::string& str_amount_)
+  {
+    std::string str_amount = str_amount_;
+    boost::algorithm::trim(str_amount);
+
+    size_t point_index = str_amount.find_first_of('.');
+    size_t fraction_size;
+    if (std::string::npos != point_index)
+    {
+      fraction_size = str_amount.size() - point_index - 1;
+      while (default_decimal_point < fraction_size && '0' == str_amount.back())
+      {
+        str_amount.erase(str_amount.size() - 1, 1);
+        --fraction_size;
+      }
+      if (default_decimal_point < fraction_size)
+        return false;
+      str_amount.erase(point_index, 1);
+    }
+    else
+    {
+      fraction_size = 0;
+    }
+
+    if (str_amount.empty())
+      return false;
+
+    if (fraction_size < default_decimal_point)
+    {
+      str_amount.append(default_decimal_point - fraction_size, '0');
+    }
+
+    return string_tools::get_xtype_from_string(amount, str_amount);
+  }
+  //---------------------------------------------------------------
+  bool parse_amount(double& amount, const std::string& str_amount_)
   {
     std::string str_amount = str_amount_;
     boost::algorithm::trim(str_amount);
@@ -955,8 +998,18 @@ namespace cryptonote
       s.insert(s.size() - decimal_point, ".");
     return s;
   }
+
+  double xmc_int_to_double(xmc_int amount)
+  {
+      xmc_float amount_float = amount.convert_to<xmc_float>();
+      xmc_float amount_xmc = amount_float / XMC_UINT;
+      double ret = amount_xmc.convert_to<double>();
+      return ret;
+  }
+
   std::string print_money(xmc_int amount, unsigned int decimal_point)
   {
+    std::cout << "**** PRINT MONEY: amount:" << amount << ",amount typeid name:"<< typeid(amount).name()<< ", decimal_point:" << decimal_point << std::endl;
     if (decimal_point == (unsigned int)-1)
       decimal_point = default_decimal_point;
     std::stringstream ss;
@@ -970,6 +1023,13 @@ namespace cryptonote
       s.insert(s.size() - decimal_point, ".");
     return s;
   }
+
+  std::string print_money(double amount)
+  {
+    std::string s = std::to_string(amount);
+    return s;
+  }
+
   //---------------------------------------------------------------
   crypto::hash get_blob_hash(const blobdata& blob)
   {

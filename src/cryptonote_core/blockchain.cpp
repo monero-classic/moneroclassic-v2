@@ -3404,7 +3404,8 @@ uint64_t Blockchain::get_dynamic_base_fee_estimate(uint64_t grace_blocks) const
   uint64_t base_reward;
   if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
   {
-    MERROR("Failed to determine block reward, using placeholder " << print_money(BLOCK_REWARD_OVERESTIMATE) << " as a high bound");
+//    MERROR("Failed to determine block reward, using placeholder " << print_money(BLOCK_REWARD_OVERESTIMATE) << " as a high bound");
+    MERROR("Failed to determine block reward, using placeholder " << print_money(static_cast<uint64_t>(BLOCK_REWARD_OVERESTIMATE)) << " as a high bound");
     base_reward = BLOCK_REWARD_OVERESTIMATE;
   }
 

@@ -299,14 +299,21 @@ string Wallet::displayAmount(uint64_t amount)
     return cryptonote::print_money(amount);
 }
 
-uint64_t Wallet::amountFromString(const string &amount)
+string Wallet::displayAmount(double amount)
+{
+    return cryptonote::print_money(amount);
+}
+
+//uint64_t Wallet::amountFromString(const string &amount)
+double Wallet::amountFromString(const string &amount)
 {
     uint64_t result = 0;
     cryptonote::parse_amount(result, amount);
     return result;
 }
 
-uint64_t Wallet::amountFromDouble(double amount)
+// uint64_t Wallet::amountFromDouble(double amount)
+double Wallet::amountFromDouble(double amount)
 {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(CRYPTONOTE_DISPLAY_DECIMAL_POINT) << amount;
@@ -946,6 +953,30 @@ bool WalletImpl::lightWalletLogin(bool &isNewWallet) const
   return m_wallet->light_wallet_login(isNewWallet);
 }
 
+bool WalletImpl::lightWalletImportWalletRequest(std::string &payment_id, double &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status)
+{
+  try
+  {
+    tools::COMMAND_RPC_IMPORT_WALLET_REQUEST::response response;
+    if(!m_wallet->light_wallet_import_wallet_request(response)){
+      setStatusError(tr("Failed to send import wallet request"));
+      return false;
+    }
+    fee = response.import_fee;
+    payment_id = response.payment_id;
+    new_request = response.new_request;
+    request_fulfilled = response.request_fulfilled;
+    payment_address = response.payment_address;
+    status = response.status;
+  }
+  catch (const std::exception &e)
+  {
+    LOG_ERROR("Error sending import wallet request: " << e.what());
+    setStatusError(e.what());
+    return false;
+  }
+  return true;
+}
 bool WalletImpl::lightWalletImportWalletRequest(std::string &payment_id, uint64_t &fee, bool &new_request, bool &request_fulfilled, std::string &payment_address, std::string &status)
 {
   try
@@ -991,12 +1022,12 @@ void WalletImpl::setSubaddressLookahead(uint32_t major, uint32_t minor)
     m_wallet->set_subaddress_lookahead(major, minor);
 }
 
-uint64_t WalletImpl::balance(uint32_t accountIndex) const
+xmc_int WalletImpl::balance(uint32_t accountIndex) const
 {
     return m_wallet->balance(accountIndex);
 }
 
-uint64_t WalletImpl::unlockedBalance(uint32_t accountIndex) const
+xmc_int WalletImpl::unlockedBalance(uint32_t accountIndex) const
 {
     return m_wallet->unlocked_balance(accountIndex);
 }
@@ -1910,6 +1941,24 @@ std::string WalletImpl::getReserveProof(bool all, uint32_t account_index, uint64
     }
 }
 
+std::string WalletImpl::getReserveProof(bool all, uint32_t account_index, double amount, const std::string &message) const {
+    try
+    {
+        clearStatus();
+        boost::optional<std::pair<uint32_t, uint64_t>> account_minreserve;
+        if (!all)
+        {
+            account_minreserve = std::make_pair(account_index, amount);
+        }
+        return m_wallet->get_reserve_proof(account_minreserve, message);
+    }
+    catch (const std::exception &e)
+    {
+        setStatusError(e.what());
+        return "";
+    }
+}
+
 bool WalletImpl::checkReserveProof(const std::string &address, const std::string &message, const std::string &signature, bool &good, uint64_t &total, uint64_t &spent) const {
     cryptonote::address_parse_info info;
     if (!cryptonote::get_account_address_from_str(info, m_wallet->nettype(), address))
@@ -2210,6 +2259,11 @@ bool WalletImpl::doInit(const string &daemon_address, uint64_t upper_transaction
 }
 
 bool WalletImpl::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
+{
+    return m_wallet->parse_uri(uri, address, payment_id, amount, tx_description, recipient_name, unknown_parameters, error);
+}
+
+bool WalletImpl::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, double &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
 {
     return m_wallet->parse_uri(uri, address, payment_id, amount, tx_description, recipient_name, unknown_parameters, error);
 }
