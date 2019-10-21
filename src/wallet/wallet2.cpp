@@ -6161,10 +6161,19 @@ void wallet2::commit_tx(pending_tx& ptx)
     m_transfers[idx].m_multisig_k.clear();
 
   //fee includes dust if dust policy specified it.
+  double xmc_balance = cryptonote::xmc_int_to_double(balance(ptx.construction_data.subaddr_account));
+  double xmc_unlocked_balance = cryptonote::xmc_int_to_double(unlocked_balance(ptx.construction_data.subaddr_account));
+  /*
   LOG_PRINT_L1("Transaction successfully sent. <" << txid << ">" << ENDL
             << "Commission: " << print_money(ptx.fee) << " (dust sent to dust addr: " << print_money((ptx.dust_added_to_fee ? 0 : ptx.dust)) << ")" << ENDL
             << "Balance: " << print_money(balance(ptx.construction_data.subaddr_account)) << ENDL
             << "Unlocked: " << print_money(unlocked_balance(ptx.construction_data.subaddr_account)) << ENDL
+            << "Please, wait for confirmation for your balance to be unlocked.");
+  */
+  LOG_PRINT_L1("Transaction successfully sent. <" << txid << ">" << ENDL
+            << "Commission: " << print_money(ptx.fee) << " (dust sent to dust addr: " << print_money((ptx.dust_added_to_fee ? 0 : ptx.dust)) << ")" << ENDL
+            << "Balance: " << print_money(xmc_balance) << ENDL
+            << "Unlocked: " << print_money(xmc_unlocked_balance) << ENDL
             << "Please, wait for confirmation for your balance to be unlocked.");
 }
 
@@ -9269,8 +9278,10 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
     balance_subtotal += balance_per_subaddr[index_minor];
     unlocked_balance_subtotal += unlocked_balance_per_subaddr[index_minor].first;
   }
+  LOG_PRINT_L1("needed_money:" << needed_money << ", min_fee:" << min_fee << ", balance_subtotal:" << balance_subtotal << "needed_money+min_fee:" << needed_money + min_fee);
   THROW_WALLET_EXCEPTION_IF(needed_money + min_fee > balance_subtotal, error::not_enough_money,
-    balance_subtotal, needed_money, 0);
+//    balance_subtotal, needed_money, 0);
+    balance_subtotal, needed_money, min_fee);
   // first check overall balance is enough, then unlocked one, so we throw distinct exceptions
   THROW_WALLET_EXCEPTION_IF(needed_money + min_fee > unlocked_balance_subtotal, error::not_enough_unlocked_money,
       unlocked_balance_subtotal, needed_money, 0);

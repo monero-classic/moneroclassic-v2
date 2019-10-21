@@ -520,24 +520,35 @@ namespace
     }
     catch (const tools::error::not_enough_unlocked_money& e)
     {
+      double available = cryptonote::xmc_int_to_double(e.available());
+      LOG_PRINT_L0(boost::format("not enough money to transfer, available only %s, sent amount %s") %
+        print_money(available) %
+        print_money(e.tx_amount()));
+
+      /*
       LOG_PRINT_L0(boost::format("not enough money to transfer, available only %s, sent amount %s") %
         print_money(e.available()) %
         print_money(e.tx_amount()));
+      */
       fail_msg_writer() << sw::tr("Not enough money in unlocked balance");
       warn_of_possible_attack = false;
     }
     catch (const tools::error::not_enough_money& e)
     {
+      double available = cryptonote::xmc_int_to_double(e.available());
       LOG_PRINT_L0(boost::format("not enough money to transfer, available only %s, sent amount %s") %
-        print_money(e.available()) %
+//        print_money(e.available()) %
+	print_money(available) %
         print_money(e.tx_amount()));
       fail_msg_writer() << sw::tr("Not enough money in unlocked balance");
       warn_of_possible_attack = false;
     }
     catch (const tools::error::tx_not_possible& e)
     {
+      double available = cryptonote::xmc_int_to_double(e.available());
       LOG_PRINT_L0(boost::format("not enough money to transfer, available only %s, transaction amount %s = %s + %s (fee)") %
-        print_money(e.available()) %
+//        print_money(e.available()) %
+        print_money(available) %
         print_money(e.tx_amount() + e.fee())  %
         print_money(e.tx_amount()) %
         print_money(e.fee()));
