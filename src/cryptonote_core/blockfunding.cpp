@@ -36,7 +36,7 @@
 #define MONERO_ENABLE_FUNDING_HEIGHT_TESTNET 2950
 #define MONERO_ENABLE_FUNDING_HEIGHT_REGTESTNET 10
 #define MONERO_BLOCK_FUNDING_RATE 0.1
-#define MONERO_BLOCK_FUNDING_RATE_NEW 0.6 // from version 60
+#define MONERO_BLOCK_FUNDING_RATE_NEW 0.7 // from version 60
 
 using namespace cryptonote;
 using namespace std;
