@@ -373,7 +373,7 @@ namespace cryptonote
         CHECK_AND_ASSERT_MES(r, false, "tx id must be array");
 
         rapidjson::SizeType sz = array_txid.Size();
-        CHECK_AND_ASSERT_MES(sz <= POS_MAX_TX_COUNT, false, "tx id should be less than 5");
+        CHECK_AND_ASSERT_MES(sz <= POS_MAX_TX_COUNT, false, "tx id should be less than " << POS_MAX_TX_COUNT);
         for (rapidjson::SizeType i = 0; i < sz; i++) {
             std::string field_id = static_cast<std::string>(array_txid[i].GetString());
             cryptonote::blobdata id_data;
@@ -381,10 +381,12 @@ namespace cryptonote
             CHECK_AND_ASSERT_MES(r, false, "Failed to parse tx id");
 
             crypto::hash id = *reinterpret_cast<const crypto::hash*>(id_data.data());
+            if (std::find(m_pos_settings.tx_id.begin(), m_pos_settings.tx_id.end(), id) != m_pos_settings.tx_id.end())
+                continue;
             m_pos_settings.tx_id.push_back(id);
         }
 
-        MINFO("POS: Loaded view key succeed, and with " << sz << " tx ids");
+        MINFO("POS: Loaded view key succeed, and with " << m_pos_settings.tx_id.size() << " tx ids");
     }
 
     // Background mining parameters
