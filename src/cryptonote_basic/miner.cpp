@@ -294,55 +294,6 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------------
   bool miner::init(const boost::program_options::variables_map& vm, network_type nettype)
   {
-    if(command_line::has_arg(vm, arg_pos_settings))
-    {
-        std::string buf, filename = command_line::get_arg(vm, arg_pos_settings);
-        bool r = epee::file_io_utils::load_file_to_string(filename, buf);
-        CHECK_AND_ASSERT_MES(r, false, "Failed to load pos settings file " << filename);
-
-        rapidjson::Document json;
-        r = json.Parse(buf.c_str()).HasParseError();
-        CHECK_AND_ASSERT_MES(!r, false, "Failed to parse pos settings JSON file " << filename);
-
-        // parse view_secret_key field
-        GET_FIELD_FROM_JSON_RETURN_ON_ERROR(json, view_secret_key, std::string, String, false, std::string());
-        CHECK_AND_ASSERT_MES(field_view_secret_key_found, false, "Failed to found view secret key");
-
-        cryptonote::blobdata viewkey_data;
-        r = epee::string_tools::parse_hexstr_to_binbuff(field_view_secret_key, viewkey_data) || viewkey_data.size() != sizeof(crypto::secret_key);
-        CHECK_AND_ASSERT_MES(r, false, "Failed to parse view key secret key");
-
-        crypto::secret_key viewkey = *reinterpret_cast<const crypto::secret_key*>(viewkey_data.data());
-        crypto::public_key pkey;
-        r = crypto::secret_key_to_public_key(viewkey, pkey);
-        CHECK_AND_ASSERT_MES(r, false, "Failed to verify view key secret key");
-
-        m_pos_settings = AUTO_VAL_INIT(m_pos_settings);
-        m_pos_settings.view_secret_key = viewkey;
-
-        // parse tx_id field
-        r = json.HasMember("tx_id");
-        CHECK_AND_ASSERT_MES(r, false, "Failed to found tx id");
-
-        const rapidjson::Value& array_txid = json["tx_id"];
-        r = array_txid.IsArray();
-        CHECK_AND_ASSERT_MES(r, false, "tx id must be array");
-
-        rapidjson::SizeType sz = array_txid.Size();
-        CHECK_AND_ASSERT_MES(sz <= POS_MAX_TX_COUNT, false, "tx id should be less than 5");
-        for (rapidjson::SizeType i = 0; i < sz; i++) {
-            std::string field_id = static_cast<std::string>(array_txid[i].GetString());
-            cryptonote::blobdata id_data;
-            r = epee::string_tools::parse_hexstr_to_binbuff(field_id, id_data) || id_data.size() != sizeof(crypto::hash);
-            CHECK_AND_ASSERT_MES(r, false, "Failed to parse tx id");
-
-            crypto::hash id = *reinterpret_cast<const crypto::hash*>(id_data.data());
-            m_pos_settings.tx_id.push_back(id);
-        }
-
-        MINFO("POS: Loaded view key succeed, and with " << sz << " tx ids");
-    }
-
     if(command_line::has_arg(vm, arg_extra_messages))
     {
       std::string buff;
@@ -382,6 +333,58 @@ namespace cryptonote
       {
         m_threads_total = command_line::get_arg(vm, arg_mining_threads);
       }
+    }
+
+    if(command_line::has_arg(vm, arg_pos_settings))
+    {
+        CHECK_AND_ASSERT_MES(m_do_mining, false, "Must specify start-ming argument when using pos-settings-file");
+
+        std::string buf, filename = command_line::get_arg(vm, arg_pos_settings);
+        bool r = epee::file_io_utils::load_file_to_string(filename, buf);
+        CHECK_AND_ASSERT_MES(r, false, "Failed to load pos settings file " << filename);
+
+        rapidjson::Document json;
+        r = json.Parse(buf.c_str()).HasParseError();
+        CHECK_AND_ASSERT_MES(!r, false, "Failed to parse pos settings JSON file " << filename);
+
+        // parse view_secret_key field
+        GET_FIELD_FROM_JSON_RETURN_ON_ERROR(json, view_secret_key, std::string, String, false, std::string());
+        CHECK_AND_ASSERT_MES(field_view_secret_key_found, false, "Failed to found view secret key");
+
+        cryptonote::blobdata viewkey_data;
+        r = epee::string_tools::parse_hexstr_to_binbuff(field_view_secret_key, viewkey_data) || viewkey_data.size() != sizeof(crypto::secret_key);
+        CHECK_AND_ASSERT_MES(r, false, "Failed to parse view key secret key");
+
+        crypto::secret_key viewkey = *reinterpret_cast<const crypto::secret_key*>(viewkey_data.data());
+        crypto::public_key pkey;
+        r = crypto::secret_key_to_public_key(viewkey, pkey);
+        CHECK_AND_ASSERT_MES(r, false, "Failed to verify view key secret key");
+        CHECK_AND_ASSERT_MES(pkey == m_mine_address.m_view_public_key, false, "view secret key does not match mine address");
+
+        m_pos_settings = AUTO_VAL_INIT(m_pos_settings);
+        m_pos_settings.view_secret_key = viewkey;
+
+        // parse tx_id field
+        r = json.HasMember("tx_id");
+        CHECK_AND_ASSERT_MES(r, false, "Failed to found tx id");
+
+        const rapidjson::Value& array_txid = json["tx_id"];
+        r = array_txid.IsArray();
+        CHECK_AND_ASSERT_MES(r, false, "tx id must be array");
+
+        rapidjson::SizeType sz = array_txid.Size();
+        CHECK_AND_ASSERT_MES(sz <= POS_MAX_TX_COUNT, false, "tx id should be less than 5");
+        for (rapidjson::SizeType i = 0; i < sz; i++) {
+            std::string field_id = static_cast<std::string>(array_txid[i].GetString());
+            cryptonote::blobdata id_data;
+            r = epee::string_tools::parse_hexstr_to_binbuff(field_id, id_data) || id_data.size() != sizeof(crypto::hash);
+            CHECK_AND_ASSERT_MES(r, false, "Failed to parse tx id");
+
+            crypto::hash id = *reinterpret_cast<const crypto::hash*>(id_data.data());
+            m_pos_settings.tx_id.push_back(id);
+        }
+
+        MINFO("POS: Loaded view key succeed, and with " << sz << " tx ids");
     }
 
     // Background mining parameters
