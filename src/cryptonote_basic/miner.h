@@ -116,6 +116,11 @@ namespace cryptonote
       END_KV_SERIALIZE_MAP()
     };
 
+    struct pos_config
+    {
+        crypto::secret_key   view_secret_key;
+        std::vector<crypto::hash> tx_id;
+    };
 
     volatile uint32_t m_stop;
     epee::critical_section m_template_lock;
@@ -173,5 +178,9 @@ namespace cryptonote
     static uint8_t get_percent_of_total(uint64_t some_time, uint64_t total_time);
     static boost::logic::tribool on_battery_power();
     std::atomic<uint64_t> m_block_reward;
+
+    // pos mining stuffs ..
+
+    pos_config m_pos_settings;
   };
 }
