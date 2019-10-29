@@ -77,13 +77,16 @@ namespace cryptonote
   }
   //---------------------------------------------------------------
 //  bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version) {
-    bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx,  const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, network_type nettype) {
+    bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx,  const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, network_type nettype, const std::vector<char> &extra_stake) {
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
 
     keypair txkey = keypair::generate(hw::get_device("default"));
     add_tx_pub_key_to_extra(tx, txkey.pub);
+    if(!extra_stake.empty())
+        if (!add_stake_to_extra(tx.extra, extra_stake))
+            return false;
     if(!extra_nonce.empty())
       if(!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
         return false;

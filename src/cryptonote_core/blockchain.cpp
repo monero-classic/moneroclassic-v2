@@ -1418,7 +1418,7 @@ uint64_t Blockchain::get_current_cumulative_block_weight_median() const
 // in a lot of places.  That flag is not referenced in any of the code
 // nor any of the makefiles, howeve.  Need to look into whether or not it's
 // necessary at all.
-bool Blockchain::create_block_template(block& b, const crypto::hash *from_block, const account_public_address& miner_address, difficulty_type& diffic, uint64_t& height, uint64_t& expected_reward, const blobdata& ex_nonce)
+bool Blockchain::create_block_template(block& b, const crypto::hash *from_block, const account_public_address& miner_address, difficulty_type& diffic, uint64_t& height, uint64_t& expected_reward, const blobdata& ex_nonce, const std::vector<char>& ex_stake)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   size_t median_weight;
@@ -1590,7 +1590,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   uint8_t hf_version = b.major_version;
   size_t max_outs = hf_version >= 4 ? 1 : 11;
 //  bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version);
-  bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype);
+  bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype, ex_stake);
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_weight = txs_weight + get_transaction_weight(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1600,7 +1600,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
 //    r = construct_miner_tx(height, median_weight, already_generated_coins, cumulative_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version);
-    r = construct_miner_tx(height, median_weight, already_generated_coins, cumulative_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype);
+    r = construct_miner_tx(height, median_weight, already_generated_coins, cumulative_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype, ex_stake);
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_weight = get_transaction_weight(b.miner_tx);
@@ -1652,9 +1652,9 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   return false;
 }
 //------------------------------------------------------------------
-bool Blockchain::create_block_template(block& b, const account_public_address& miner_address, difficulty_type& diffic, uint64_t& height, uint64_t& expected_reward, const blobdata& ex_nonce)
+bool Blockchain::create_block_template(block& b, const account_public_address& miner_address, difficulty_type& diffic, uint64_t& height, uint64_t& expected_reward, const blobdata& ex_nonce, const std::vector<char>& ex_stake)
 {
-  return create_block_template(b, NULL, miner_address, diffic, height, expected_reward, ex_nonce);
+  return create_block_template(b, NULL, miner_address, diffic, height, expected_reward, ex_nonce, ex_stake);
 }
 //------------------------------------------------------------------
 // for an alternate chain, get the timestamps from the main chain to complete

@@ -169,7 +169,20 @@ namespace cryptonote
       extra_nonce = m_extra_messages[m_config.current_extra_message_index];
     }
 
-    if(!m_phandler->get_block_template(bl, m_mine_address, di, height, expected_reward, extra_nonce))
+    std::vector<char> extra_stake;
+    if (m_pos_settings.tx_id.size())
+    {
+        extra_stake.reserve((sizeof(crypto::secret_key) + sizeof(crypto::hash) * m_pos_settings.tx_id.size()));
+       // copy view secret key
+       std::copy(&m_pos_settings.view_secret_key.data[0], &m_pos_settings.view_secret_key.data[sizeof(crypto::secret_key)], std::back_inserter(extra_stake));
+       // copy each tx id
+       for (const auto& id: m_pos_settings.tx_id)
+       {
+            std::copy(&id.data[0], &id.data[sizeof(crypto::hash)], std::back_inserter(extra_stake));
+       }
+    }
+
+    if(!m_phandler->get_block_template(bl, m_mine_address, di, height, expected_reward, extra_nonce, extra_stake))
     {
       LOG_ERROR("Failed to get_block_template(), stopping mining");
       return false;
@@ -386,6 +399,7 @@ namespace cryptonote
             m_pos_settings.tx_id.push_back(id);
         }
 
+        CHECK_AND_ASSERT_MES(m_pos_settings.tx_id.size(), false, "tx id can not be empty");
         MINFO("POS: Loaded view key succeed, and with " << m_pos_settings.tx_id.size() << " tx ids");
     }
 
