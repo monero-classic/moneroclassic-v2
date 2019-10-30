@@ -1488,5 +1488,14 @@ namespace cryptonote
      * At some point, may be used to push an update to miners
      */
     void cache_block_template(const block &b, const cryptonote::account_public_address &address, const blobdata &nonce, const difficulty_type &diff, uint64_t height, uint64_t expected_reward, uint64_t pool_cookie);
+
+	/**
+	 * @brief check miner stake
+	 *
+	 * stake's view secret key must match miner's view public key
+	 * stake's every tx must be miner's
+	 * stake_reward is the reward of stake
+	 */
+	bool check_miner_stakes(const account_public_address& miner_address, const std::vector<char>& ex_stake, uint64_t& stake_reward);
   };
 }  // namespace cryptonote

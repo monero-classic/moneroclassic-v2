@@ -768,24 +768,37 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool add_stake_to_extra(std::vector<uint8_t>& tx_extra, const std::vector<char> &extra_stake)
+  bool get_tx_stake_from_extra(crypto::secret_key& view_secret_key, std::vector<crypto::hash>& tx_id, const std::vector<char>& extra_stake)
   {
     const size_t HASH_SIZE = sizeof(crypto::hash);
     if (extra_stake.size() % HASH_SIZE != 0 || extra_stake.size() < HASH_SIZE * 2)
         return false;
 
-    // parse stake
-    tx_extra_stake stake;
-    std::copy(extra_stake.data(), extra_stake.data() + HASH_SIZE, stake.view_secret_key.data);
+    std::copy(extra_stake.data(), extra_stake.data() + HASH_SIZE, view_secret_key.data);
 
-    size_t cnt = extra_stake.size() /  sizeof(crypto::hash) - 1;
-    stake.count = static_cast<uint8_t>(cnt);
+    size_t cnt = extra_stake.size() /  HASH_SIZE - 1;
     for (size_t i = 0; i < cnt; ++i)
     {
         crypto::hash id;
         std::copy(extra_stake.data() + HASH_SIZE  * (1 + i), extra_stake.data() + HASH_SIZE * (2 + i), id.data);
-        stake.tx_id.push_back(id);
+        tx_id.push_back(id);
     }
+    return true;
+  }
+  //---------------------------------------------------------------
+  bool add_stake_to_extra(std::vector<uint8_t>& tx_extra, const std::vector<char> &extra_stake)
+  {
+    crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
+    std::vector<crypto::hash> ti = AUTO_VAL_INIT(ti);
+
+    if (!get_tx_stake_from_extra(vsk, ti, extra_stake))
+        return false;
+
+    // parse stake
+    tx_extra_stake stake;
+    stake.view_secret_key = vsk;
+    stake.tx_id = ti;
+    stake.count = static_cast<uint8_t>(ti.size());
 
     // convert to variant
     tx_extra_field field = stake;

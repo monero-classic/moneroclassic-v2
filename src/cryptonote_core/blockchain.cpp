@@ -94,24 +94,31 @@ static const struct {
   { 1, 1, 0, 1341378000 },
 
   // version 2 starts from block 1009827, which is on or around the 20th of March, 2016. Fork time finalised on 2015-09-20. No fork voting occurs for the v2 fork.
-  { 2, 1009827, 0, 1442763710 },
+  //{ 2, 1009827, 0, 1442763710 },
+    { 2, 1025, 0, 1442763710 },
 
   // version 3 starts from block 1141317, which is on or around the 24th of September, 2016. Fork time finalised on 2016-03-21.
-  { 3, 1141317, 0, 1458558528 },
+  //{ 3, 1141317, 0, 1458558528 },
+    { 3, 1026, 0, 1458558528 },
   
   // version 4 starts from block 1220516, which is on or around the 5th of January, 2017. Fork time finalised on 2016-09-18.
-  { 4, 1220516, 0, 1483574400 },
+  //{ 4, 1220516, 0, 1483574400 },
+    { 4, 1027, 0, 1483574400 },
   
   // version 5 starts from block 1288616, which is on or around the 15th of April, 2017. Fork time finalised on 2017-03-14.
-  { 5, 1288616, 0, 1489520158 },  
+  //{ 5, 1288616, 0, 1489520158 },
+    { 5, 1028, 0, 1489520158 },
 
   // version 6 starts from block 1400000, which is on or around the 16th of September, 2017. Fork time finalised on 2017-08-18.
-  { 6, 1400000, 0, 1503046577 },
+  //{ 6, 1400000, 0, 1503046577 },
+    { 6, 1029, 0, 1503046577 },
 
   // version 60 starts from block 1907000
-  { HF_VERSION_60, DIFFICULTY_ADJUST_HEIGHT, 0, 1565600181},
+  //{ HF_VERSION_60, DIFFICULTY_ADJUST_HEIGHT, 0, 1565600181},
+    { HF_VERSION_60, 1030, 0, 1565600181},
 };
-static const uint64_t mainnet_hard_fork_version_1_till = 1009826;
+//static const uint64_t mainnet_hard_fork_version_1_till = 1009826;
+static const uint64_t mainnet_hard_fork_version_1_till = 1024;
 
 static const struct {
   uint8_t version;
@@ -1521,6 +1528,9 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   }
 
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
+
+  uint64_t pos_reward = 0;
+  CHECK_AND_ASSERT_MES(check_miner_stakes(miner_address, ex_stake, pos_reward), false, "check miner's pos failed");
 
   size_t txs_weight;
   uint64_t fee;
@@ -5078,6 +5088,95 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
   m_btc_expected_reward = expected_reward;
   m_btc_pool_cookie = pool_cookie;
   m_btc_valid = true;
+}
+
+bool Blockchain::check_miner_stakes(const account_public_address& miner_address, const std::vector<char>& ex_stake, uint64_t& stake_reward)
+{
+    stake_reward = 0;
+
+    crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
+    std::vector<crypto::hash> ti = AUTO_VAL_INIT(ti);
+    bool r = get_tx_stake_from_extra(vsk, ti, ex_stake);
+    CHECK_AND_ASSERT_MES(r, false, "failed to parse tx extra stake");
+
+    crypto::public_key pkey;
+    r = crypto::secret_key_to_public_key(vsk, pkey);
+    CHECK_AND_ASSERT_MES(r, false, "Failed to verify view key secret key");
+    CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
+
+    std::vector<crypto::hash> mis;
+    std::vector<transaction> txs;
+    get_transactions(ti, txs, mis);
+    CHECK_AND_ASSERT_MES(!mis.size() && txs.size(), false, "transaction provided by extra stake not found");
+
+    uint64_t weight = 0;
+    hw::device &hwd = hw::get_device("default");
+    for(const auto& tx: txs)
+    {
+        uint64_t amount = 0;
+        // we only need locked tx, and since tx is locked, so it's unspent, thus we don't need check double spend.
+        if (is_tx_spendtime_unlocked(tx.unlock_time))
+            continue;
+
+        // we don't want coinbase tx
+        if (is_coinbase(tx))
+            continue;
+
+        const rct::rctSig& rv = tx.rct_signatures;
+
+        const crypto::public_key tx_pub_key = get_tx_pub_key_from_extra(tx);
+        crypto::key_derivation derivation;
+        r = hwd.generate_key_derivation(tx_pub_key, vsk, derivation);
+        CHECK_AND_ASSERT_MES(r, false, "Failed to generate key derivation");
+
+        // scan all output, calculate amount
+        for(size_t i = 0; i < tx.vout.size(); ++i)
+        {
+            const cryptonote::tx_out& vo = tx.vout[i];
+
+            // we only need txout_to_key
+            if (vo.target.type() !=  typeid(txout_to_key))
+                continue;
+
+            // check if this is our address
+            crypto::public_key pk;
+            r = hwd.derive_public_key(derivation, i, miner_address.m_spend_public_key, pk);
+            CHECK_AND_ASSERT_MES(r, false, "Failed to derive public key");
+            if (pk != boost::get<txout_to_key>(vo.target).key)
+                continue;
+
+            crypto::secret_key scalar1;
+            hwd.derivation_to_scalar(derivation, i, scalar1);
+
+            // we decode the amount
+            rct::key mask;
+            uint8_t type = rv.type;
+            switch (type)
+            {
+            case rct::RCTTypeSimple:
+            case rct::RCTTypeBulletproof:
+            case rct::RCTTypeBulletproof2:
+              amount += rct::decodeRctSimple(rv, rct::sk2rct(scalar1), static_cast<unsigned int>(i), mask, hwd);
+                break;
+            case rct::RCTTypeFull:
+              amount += rct::decodeRct(rv, rct::sk2rct(scalar1), static_cast<unsigned int>(i), mask, hwd);
+                break;
+            // This should never happen
+            case rct::RCTTypeNull:
+                amount += vo.amount;
+                break;
+            default:
+              LOG_ERROR("Unsupported rct type: " << type);
+                break;
+            }
+        }
+
+        // we calculate weight
+        //weight += amount * ( tx.unlock_time - m_db->height());
+    }
+    // we use amount and lock time to calculate weight, and then for pos reward
+
+    return true;
 }
 
 namespace cryptonote {
