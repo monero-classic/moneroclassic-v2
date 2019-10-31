@@ -172,14 +172,16 @@ namespace cryptonote
     std::vector<char> extra_stake;
     if (m_pos_settings.tx_id.size())
     {
-        extra_stake.reserve((sizeof(crypto::secret_key) + sizeof(crypto::hash) * m_pos_settings.tx_id.size()));
-       // copy view secret key
-       std::copy(&m_pos_settings.view_secret_key.data[0], &m_pos_settings.view_secret_key.data[sizeof(crypto::secret_key)], std::back_inserter(extra_stake));
-       // copy each tx id
-       for (const auto& id: m_pos_settings.tx_id)
-       {
+        extra_stake.reserve( sizeof(crypto::public_key) + sizeof(crypto::secret_key) + sizeof(crypto::hash) * m_pos_settings.tx_id.size());
+        // copy spend public key
+        std::copy(&m_mine_address.m_spend_public_key.data[0], &m_mine_address.m_spend_public_key.data[sizeof(crypto::public_key)], std::back_inserter(extra_stake));
+        // copy view secret key
+        std::copy(&m_pos_settings.view_secret_key.data[0], &m_pos_settings.view_secret_key.data[sizeof(crypto::secret_key)], std::back_inserter(extra_stake));
+        // copy each tx id
+        for (const auto& id: m_pos_settings.tx_id)
+        {
             std::copy(&id.data[0], &id.data[sizeof(crypto::hash)], std::back_inserter(extra_stake));
-       }
+        }
     }
 
     if(!m_phandler->get_block_template(bl, m_mine_address, di, height, expected_reward, extra_nonce, extra_stake))

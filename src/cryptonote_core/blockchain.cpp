@@ -1257,6 +1257,41 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_block_weight, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
+  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
+  uint64_t pos_reward = 0;
+  crypto::public_key spk = AUTO_VAL_INIT(spk);
+  crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
+  std::vector<crypto::hash> ti = AUTO_VAL_INIT(ti);
+  bool r = get_tx_stake_from_extra(spk, vsk, ti, b.miner_tx.extra, 0);
+  if (r)
+  {
+      // miner us pos, we should make check
+      // 1. check if vout and spk, vsk match
+      crypto::public_key tx_pub_key = cryptonote::get_tx_pub_key_from_extra(b.miner_tx.extra);
+
+      account_keys acc;
+      acc.m_view_secret_key = vsk;
+      acc.m_account_address.m_spend_public_key = spk;
+
+      r = false;
+      for (size_t i = 0; i < b.miner_tx.vout.size(); ++i)
+      {
+          const tx_out& tax_out = b.miner_tx.vout[i];
+          std::vector<crypto::public_key> additional_derivations;
+          r = cryptonote::is_out_to_acc(acc, boost::get<txout_to_key>(tax_out.target), tx_pub_key, additional_derivations, i);
+          // there are should be two outputs, one is miner reward, another is funding reward, we need miner reward be true should ok
+          if (r) break;
+      }
+      CHECK_AND_ASSERT_MES(r, false, "failed to validate miner's stake extra");
+
+      // 2. check if amount match pos's stake
+      crypto::public_key vpk = AUTO_VAL_INIT(vpk);
+      r = crypto::secret_key_to_public_key(vsk, vpk);
+      CHECK_AND_ASSERT_MES(r, false, "illegal view secret key in stake extra");
+
+      r = check_miner_stakes(spk, vsk, ti, height, pos_reward);
+  }
+
   //validate reward
   uint64_t money_in_use = 0;
   for (auto& o: b.miner_tx.vout)
@@ -1277,7 +1312,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     }
   }
 
-  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
+
   uint64_t funding_amount = 0;
   uint64_t miner_reward_amount = 0;
 //  cryptonote::BlockFunding fundctl;
@@ -1529,8 +1564,23 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
 
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
 
+  // calculate pos reward
   uint64_t pos_reward = 0;
-  CHECK_AND_ASSERT_MES(check_miner_stakes(miner_address, ex_stake, pos_reward), false, "check miner's pos failed");
+  if (!ex_stake.empty())
+  {
+      crypto::public_key spk = AUTO_VAL_INIT(spk);
+      crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
+      std::vector<crypto::hash> ti = AUTO_VAL_INIT(ti);
+      bool r = get_tx_stake_from_extra(spk, vsk, ti, ex_stake);
+      CHECK_AND_ASSERT_MES(r, false, "failed to parse tx extra stake");
+      CHECK_AND_ASSERT_MES(spk == miner_address.m_spend_public_key, false, "failed to construct stake extra spend pub key");
+
+      crypto::public_key pkey;
+      r = crypto::secret_key_to_public_key(vsk, pkey);
+      CHECK_AND_ASSERT_MES(r, false, "failed to verify view key secret key");
+      CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
+      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, height, pos_reward), false, "check miner's pos failed");
+  }
 
   size_t txs_weight;
   uint64_t fee;
@@ -5091,19 +5141,9 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
   m_btc_valid = true;
 }
 
-bool Blockchain::check_miner_stakes(const account_public_address& miner_address, const std::vector<char>& ex_stake, uint64_t& stake_reward)
+bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, std::vector<hash> &ti, size_t height, uint64_t& stake_reward)
 {
     stake_reward = 0;
-
-    crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
-    std::vector<crypto::hash> ti = AUTO_VAL_INIT(ti);
-    bool r = get_tx_stake_from_extra(vsk, ti, ex_stake);
-    CHECK_AND_ASSERT_MES(r, false, "failed to parse tx extra stake");
-
-    crypto::public_key pkey;
-    r = crypto::secret_key_to_public_key(vsk, pkey);
-    CHECK_AND_ASSERT_MES(r, false, "Failed to verify view key secret key");
-    CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
 
     std::vector<crypto::hash> mis;
     std::vector<transaction> txs;
@@ -5127,7 +5167,7 @@ bool Blockchain::check_miner_stakes(const account_public_address& miner_address,
 
         const crypto::public_key tx_pub_key = get_tx_pub_key_from_extra(tx);
         crypto::key_derivation derivation;
-        r = hwd.generate_key_derivation(tx_pub_key, vsk, derivation);
+        bool r = hwd.generate_key_derivation(tx_pub_key, view_seckey, derivation);
         CHECK_AND_ASSERT_MES(r, false, "Failed to generate key derivation");
 
         // scan all output, calculate amount
@@ -5141,7 +5181,7 @@ bool Blockchain::check_miner_stakes(const account_public_address& miner_address,
 
             // check if this is our address
             crypto::public_key pk;
-            r = hwd.derive_public_key(derivation, i, miner_address.m_spend_public_key, pk);
+            r = hwd.derive_public_key(derivation, i, spend_pubkey, pk);
             CHECK_AND_ASSERT_MES(r, false, "Failed to derive public key");
             if (pk != boost::get<txout_to_key>(vo.target).key)
                 continue;
@@ -5173,7 +5213,7 @@ bool Blockchain::check_miner_stakes(const account_public_address& miner_address,
         }
 
         // TODO: we calculate weight
-        //weight += amount * ( tx.unlock_time - m_db->height());
+        //weight += amount * ( tx.unlock_time - height);
     }
     // TODO: we use amount and lock time to calculate weight, and then for pos reward
 

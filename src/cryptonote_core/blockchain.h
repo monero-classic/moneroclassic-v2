@@ -1496,6 +1496,6 @@ namespace cryptonote
 	 * stake's every tx must be miner's
 	 * stake_reward is the reward of stake
 	 */
-	bool check_miner_stakes(const account_public_address& miner_address, const std::vector<char>& ex_stake, uint64_t& stake_reward);
+    bool check_miner_stakes(const crypto::public_key& spend_pubkey, const crypto::secret_key& view_seckey, std::vector<crypto::hash>& ti, size_t height, uint64_t& stake_reward);
   };
 }  // namespace cryptonote

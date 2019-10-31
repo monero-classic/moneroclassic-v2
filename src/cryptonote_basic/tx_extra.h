@@ -182,11 +182,13 @@ namespace cryptonote
 
   struct tx_extra_stake
   {
+    crypto::public_key spend_pub_key;
     crypto::secret_key view_secret_key;
     uint8_t count;
     std::vector<crypto::hash> tx_id;
 
     BEGIN_SERIALIZE()
+      FIELD(spend_pub_key)
       FIELD(view_secret_key)
       FIELD(count)
       FIELD(tx_id)

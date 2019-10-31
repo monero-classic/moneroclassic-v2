@@ -768,34 +768,54 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool get_tx_stake_from_extra(crypto::secret_key& view_secret_key, std::vector<crypto::hash>& tx_id, const std::vector<char>& extra_stake)
+  bool get_tx_stake_from_extra(crypto::public_key& spend_pub_key, crypto::secret_key& view_secret_key, std::vector<crypto::hash>& tx_ids, const std::vector<char>& extra_stake)
   {
-    const size_t HASH_SIZE = sizeof(crypto::hash);
-    if (extra_stake.size() % HASH_SIZE != 0 || extra_stake.size() < HASH_SIZE * 2)
+    const size_t HASH_SIZE = sizeof(crypto::hash); // public_key, secret_key, hash has same size
+    if (extra_stake.size() % HASH_SIZE != 0 || extra_stake.size() < HASH_SIZE * 3)
         return false;
 
-    std::copy(extra_stake.data(), extra_stake.data() + HASH_SIZE, view_secret_key.data);
+    std::copy(extra_stake.data(), extra_stake.data() + HASH_SIZE, spend_pub_key.data);
 
-    size_t cnt = extra_stake.size() /  HASH_SIZE - 1;
+    std::copy(extra_stake.data() + HASH_SIZE, extra_stake.data() + 2 * HASH_SIZE, view_secret_key.data);
+
+    size_t cnt = extra_stake.size() /  HASH_SIZE - 2;
     for (size_t i = 0; i < cnt; ++i)
     {
         crypto::hash id;
-        std::copy(extra_stake.data() + HASH_SIZE  * (1 + i), extra_stake.data() + HASH_SIZE * (2 + i), id.data);
-        tx_id.push_back(id);
+        std::copy(extra_stake.data() + HASH_SIZE  * (2 + i), extra_stake.data() + HASH_SIZE * (3 + i), id.data);
+        tx_ids.push_back(id);
     }
+    return true;
+  }
+  //---------------------------------------------------------------
+  bool get_tx_stake_from_extra(crypto::public_key& spend_pub_key, crypto::secret_key& view_secret_key, std::vector<crypto::hash>& tx_ids, const std::vector<uint8_t> &tx_extra, size_t stk_index)
+  {
+    std::vector<tx_extra_field> tx_extra_fields;
+    parse_tx_extra(tx_extra, tx_extra_fields);
+
+    tx_extra_stake stake_field;
+    if(!find_tx_extra_field_by_type(tx_extra_fields, stake_field, stk_index))
+        return false;
+
+    spend_pub_key = stake_field.spend_pub_key;
+    view_secret_key = stake_field.view_secret_key;
+    tx_ids = stake_field.tx_id;
+
     return true;
   }
   //---------------------------------------------------------------
   bool add_stake_to_extra(std::vector<uint8_t>& tx_extra, const std::vector<char> &extra_stake)
   {
+    crypto::public_key spk = AUTO_VAL_INIT(spk);
     crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
     std::vector<crypto::hash> ti = AUTO_VAL_INIT(ti);
 
-    if (!get_tx_stake_from_extra(vsk, ti, extra_stake))
+    if (!get_tx_stake_from_extra(spk, vsk, ti, extra_stake))
         return false;
 
     // parse stake
     tx_extra_stake stake;
+    stake.spend_pub_key = spk;
     stake.view_secret_key = vsk;
     stake.tx_id = ti;
     stake.count = static_cast<uint8_t>(ti.size());
