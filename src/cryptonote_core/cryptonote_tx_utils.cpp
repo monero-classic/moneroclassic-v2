@@ -77,7 +77,7 @@ namespace cryptonote
   }
   //---------------------------------------------------------------
 //  bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version) {
-    bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx,  const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, network_type nettype, const std::vector<char> &extra_stake) {
+    bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx,  const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, network_type nettype, const std::vector<char> &extra_stake, uint64_t pos_reward) {
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
@@ -133,6 +133,8 @@ namespace cryptonote
       block_reward = miner_reward;
       MERROR("construct_miner_tx,block_reward=" << block_reward <<",fund_reward=" << fund_reward << ",height=" << height);
     }
+
+    block_reward += pos_reward;
 
     std::vector<uint64_t> out_amounts;
     decompose_amount_into_digits(block_reward, hard_fork_version >= 2 ? 0 : ::config::DEFAULT_DUST_THRESHOLD,
