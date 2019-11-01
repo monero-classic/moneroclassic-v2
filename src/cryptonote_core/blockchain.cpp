@@ -1265,7 +1265,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   bool r = get_tx_stake_from_extra(spk, vsk, ti, b.miner_tx.extra, 0);
   if (r)
   {
-      // miner us pos, we should make check
+      // miner use pos, we should make check
       // 1. check if vout and spk, vsk match
       crypto::public_key tx_pub_key = cryptonote::get_tx_pub_key_from_extra(b.miner_tx.extra);
 
@@ -1312,7 +1312,6 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     }
   }
 
-
   uint64_t funding_amount = 0;
   uint64_t miner_reward_amount = 0;
 //  cryptonote::BlockFunding fundctl;
@@ -1335,6 +1334,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     MERROR_VER("block weight " << cumulative_block_weight << " is bigger than allowed for this blockchain");
     return false;
   }
+  base_reward += pos_reward;
   if(base_reward + fee < money_in_use)
   {
     MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
@@ -5150,7 +5150,6 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
     get_transactions(ti, txs, mis);
     CHECK_AND_ASSERT_MES(!mis.size() && txs.size(), false, "transaction provided by extra stake not found");
 
-    uint64_t weight = 0;
     hw::device &hwd = hw::get_device("default");
     for(const auto& tx: txs)
     {
@@ -5186,8 +5185,8 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
             if (pk != boost::get<txout_to_key>(vo.target).key)
                 continue;
 
-            crypto::secret_key scalar1;
-            hwd.derivation_to_scalar(derivation, i, scalar1);
+            crypto::secret_key sk;
+            hwd.derivation_to_scalar(derivation, i, sk);
 
             // we decode the amount
             rct::key mask;
@@ -5197,10 +5196,10 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
             case rct::RCTTypeSimple:
             case rct::RCTTypeBulletproof:
             case rct::RCTTypeBulletproof2:
-              amount += rct::decodeRctSimple(rv, rct::sk2rct(scalar1), static_cast<unsigned int>(i), mask, hwd);
+              amount += rct::decodeRctSimple(rv, rct::sk2rct(sk), static_cast<unsigned int>(i), mask, hwd);
                 break;
             case rct::RCTTypeFull:
-              amount += rct::decodeRct(rv, rct::sk2rct(scalar1), static_cast<unsigned int>(i), mask, hwd);
+              amount += rct::decodeRct(rv, rct::sk2rct(sk), static_cast<unsigned int>(i), mask, hwd);
                 break;
             // This should never happen
             case rct::RCTTypeNull:
@@ -5216,7 +5215,6 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
         //weight += amount * ( tx.unlock_time - height);
         stake_reward += get_pos_block_reward(tx.unlock_time, timestamp, height, amount);
     }
-    // TODO: we use amount and lock time to calculate weight, and then for pos reward
 
     return true;
 }
