@@ -46,6 +46,10 @@ using namespace epee;
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
 
+const static uint64_t MIN_STAKE_COIN = 1e12;    // minimum stake coin, 1 XMC
+const static size_t   MIN_STAKE_HEIGHT = 21600;  // minimum stake height, 3 month
+const static uint64_t MIN_STAKE_TIMESTAMP = 3 * 30 * 24 * 60 * 60;  // minimum stake time, 3 month
+
 namespace cryptonote {
 
   struct integrated_address {
@@ -318,8 +322,44 @@ namespace cryptonote {
   }
 
   bool operator ==(const cryptonote::block& a, const cryptonote::block& b) {
-    return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
+      return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
   }
+  //--------------------------------------------------------------------------------
+  uint64_t get_pos_block_reward(uint64_t unlock_time, uint64_t block_time, size_t block_height, uint64_t staked_coins)
+  {
+      uint64_t reward = 0;
+
+      if (staked_coins < MIN_STAKE_COIN)
+          return reward;
+
+      if (unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER)
+      {
+          // treat unlock_time as height
+          if (unlock_time < block_height)
+              return reward;
+
+          uint64_t delta_height = unlock_time - block_height;
+          if (delta_height < MIN_STAKE_HEIGHT)
+              return reward;
+      }
+      else
+      {
+          // treat unlock_time as timestamp
+          if (unlock_time < block_time)
+              return reward;
+
+          uint64_t delta_ts = unlock_time - block_time;
+          if (delta_ts < MIN_STAKE_TIMESTAMP)
+              return reward;
+
+      }
+
+
+      // TODO: need more..
+
+      return reward;
+  }
+  //--------------------------------------------------------------------------------
 }
 
 //--------------------------------------------------------------------------------

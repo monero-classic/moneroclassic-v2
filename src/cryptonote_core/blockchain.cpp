@@ -1289,7 +1289,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
       r = crypto::secret_key_to_public_key(vsk, vpk);
       CHECK_AND_ASSERT_MES(r, false, "illegal view secret key in stake extra");
 
-      r = check_miner_stakes(spk, vsk, ti, height, pos_reward);
+      r = check_miner_stakes(spk, vsk, ti, height, b.timestamp, pos_reward);
   }
 
   //validate reward
@@ -1579,7 +1579,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
       r = crypto::secret_key_to_public_key(vsk, pkey);
       CHECK_AND_ASSERT_MES(r, false, "failed to verify view key secret key");
       CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
-      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, height, pos_reward), false, "check miner's pos failed");
+      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, height, b.timestamp, pos_reward), false, "check miner's pos failed");
   }
 
   size_t txs_weight;
@@ -5141,7 +5141,7 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
   m_btc_valid = true;
 }
 
-bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, std::vector<hash> &ti, size_t height, uint64_t& stake_reward)
+bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, std::vector<hash> &ti, size_t height, uint64_t timestamp, uint64_t& stake_reward)
 {
     stake_reward = 0;
 
@@ -5214,6 +5214,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
 
         // TODO: we calculate weight
         //weight += amount * ( tx.unlock_time - height);
+        stake_reward += get_pos_block_reward(tx.unlock_time, timestamp, height, amount);
     }
     // TODO: we use amount and lock time to calculate weight, and then for pos reward
 
