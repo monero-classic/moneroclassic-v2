@@ -77,7 +77,7 @@
 
 #define AUTODETECT_WINDOW 10 // seconds
 #define AUTODETECT_GAIN_THRESHOLD 1.02f  // 2%
-#define POS_MAX_TX_COUNT 5
+#define POS_MAX_TX_COUNT 20
 
 using namespace epee;
 

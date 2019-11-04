@@ -46,9 +46,15 @@ using namespace epee;
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
 
-const static uint64_t MIN_STAKE_COIN = 1e12;    // minimum stake coin, 1 XMC
-const static size_t   MIN_STAKE_HEIGHT = 21600;  // minimum stake height, 3 month
-const static uint64_t MIN_STAKE_TIMESTAMP = 3 * 30 * 24 * 60 * 60;  // minimum stake time, 3 month
+const static size_t   MIN_STAKE_HEIGHT = 2160;  // minimum stake height, 3 day
+const static uint64_t MIN_STAKE_TIMESTAMP = 3  * 24 * 60 * 60;  // minimum stake time, 3 day
+
+// for timestamp map, we can multiple 60 * 2 for STAKE_HEIGHT_PROFIT's first
+const static std::map<uint64_t, uint64_t> STAKE_HEIGHT_PROFIT = {
+    {3  * 24 * 60 / 2, 1},     // 3 day
+    {6  * 24 * 60 / 2, 3},     // 6 day
+    {12 * 24 * 60 / 2, 10},    // 12 day
+};
 
 namespace cryptonote {
 
@@ -325,12 +331,20 @@ namespace cryptonote {
       return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
   }
   //--------------------------------------------------------------------------------
-  uint64_t get_pos_block_reward(uint64_t unlock_time, uint64_t block_time, size_t block_height, uint64_t staked_coins)
+  uint64_t get_pos_block_reward(uint64_t unlock_time, size_t block_height, uint64_t block_time, uint64_t staked_coins)
   {
-      uint64_t reward = 0;
+      uint64_t reward = 0, time_proft = 0;
 
-      if (staked_coins < MIN_STAKE_COIN)
-          return reward;
+      auto cal_tp = [&](uint64_t t, bool is_height) {
+          uint64_t tp = 0;
+          for (auto i = STAKE_HEIGHT_PROFIT.rbegin(); i != STAKE_HEIGHT_PROFIT.rend(); ++i ) {
+              if (t / (i->first * (is_height ? 1 : 2 * 60))) {
+                  tp = i->second;
+                  break;
+              }
+          }
+          return tp;
+      };
 
       if (unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER)
       {
@@ -341,9 +355,9 @@ namespace cryptonote {
           uint64_t delta_height = unlock_time - block_height;
           if (delta_height < MIN_STAKE_HEIGHT)
               return reward;
-      }
-      else
-      {
+
+          time_proft = cal_tp(delta_height, true);
+      } else {
           // treat unlock_time as timestamp
           if (unlock_time < block_time)
               return reward;
@@ -352,10 +366,11 @@ namespace cryptonote {
           if (delta_ts < MIN_STAKE_TIMESTAMP)
               return reward;
 
+          time_proft = cal_tp(delta_ts, false);
       }
 
-
       // TODO: need more..
+      reward = staked_coins * time_proft / 100000;
 
       return reward;
   }

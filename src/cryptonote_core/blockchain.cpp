@@ -161,6 +161,8 @@ static const struct {
   { 6, 36000, 0, 1521480000 },
 };
 
+const static uint64_t MIN_STAKE_COIN = 10000e12; // 10'000 XMC
+
 //------------------------------------------------------------------
 Blockchain::Blockchain(tx_memory_pool& tx_pool) :
   m_db(), m_tx_pool(tx_pool), m_hardfork(NULL), m_timestamps_and_difficulties_height(0), m_current_block_cumul_weight_limit(0), m_current_block_cumul_weight_median(0),
@@ -5150,6 +5152,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
     get_transactions(ti, txs, mis);
     CHECK_AND_ASSERT_MES(!mis.size() && txs.size(), false, "transaction provided by extra stake not found");
 
+    uint64_t staked_coin = 0;
     hw::device &hwd = hw::get_device("default");
     for(const auto& tx: txs)
     {
@@ -5209,12 +5212,18 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
               LOG_ERROR("Unsupported rct type: " << type);
                 break;
             }
+
+            staked_coin += amount;
         }
 
         // TODO: we calculate weight
-        //weight += amount * ( tx.unlock_time - height);
-        stake_reward += get_pos_block_reward(tx.unlock_time, timestamp, height, amount);
+        stake_reward += cryptonote::get_pos_block_reward(tx.unlock_time, height, timestamp, amount);
     }
+
+    stake_reward = stake_reward > 1e12 ? 1e12 : stake_reward;
+
+    if (staked_coin < MIN_STAKE_COIN)
+        stake_reward = 0;
 
     return true;
 }
