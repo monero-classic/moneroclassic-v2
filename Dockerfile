@@ -188,25 +188,24 @@ RUN set -ex && \
     rm -rf /var/lib/apt
 COPY --from=builder /src/build/release/bin /usr/local/bin/
 
-# Create monero user
-RUN adduser --system --group --disabled-password monero && \
-	mkdir -p /wallet /home/monero/.bitmonero && \
-	chown -R monero:monero /home/monero/.bitmonero && \
-	chown -R monero:monero /wallet
+# Create moneroclassic user
+RUN adduser --system --group --disabled-password moneroclassic && \
+	mkdir -p /wallet /home/moneroclassic/.bitmoneroclassic && \
+	chown -R moneroclassic:moneroclassic /home/moneroclassic/.bitmoneroclassic && \
+	chown -R moneroclassic:moneroclassic /wallet
 
 # Contains the blockchain
-VOLUME /home/monero/.bitmonero
+VOLUME /home/moneroclassic/.bitmoneroclassic
 
 # Generate your wallet via accessing the container and run:
 # cd /wallet
-# monero-wallet-cli
+# moneroclassic-wallet-cli
 VOLUME /wallet
 
 EXPOSE 18080
 EXPOSE 18081
 
-# switch to user monero
-USER monero
+# switch to user moneroclassic
+USER moneroclassic
 
-ENTRYPOINT ["monerod", "--p2p-bind-ip=0.0.0.0", "--p2p-bind-port=18080", "--rpc-bind-ip=0.0.0.0", "--rpc-bind-port=18081", "--non-interactive", "--confirm-external-bind"]
-
+ENTRYPOINT ["moneroclassicd", "--p2p-bind-ip=0.0.0.0", "--p2p-bind-port=18080", "--rpc-bind-ip=0.0.0.0", "--rpc-bind-port=18081", "--non-interactive", "--confirm-external-bind"]
