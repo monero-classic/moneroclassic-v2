@@ -5144,7 +5144,7 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
   m_btc_valid = true;
 }
 
-bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, std::vector<hash> &ti, uint64_t& stake_reward)
+bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, const std::vector<hash> &ti, uint64_t& stake_reward)
 {
     stake_reward = 0;
 
