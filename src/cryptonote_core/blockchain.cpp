@@ -1259,7 +1259,7 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_block_weight, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
-  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
+
   uint64_t pos_reward = 0;
   crypto::public_key spk = AUTO_VAL_INIT(spk);
   crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
@@ -1291,7 +1291,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
       r = crypto::secret_key_to_public_key(vsk, vpk);
       CHECK_AND_ASSERT_MES(r, false, "illegal view secret key in stake extra");
 
-      r = check_miner_stakes(spk, vsk, ti, height, b.timestamp, pos_reward);
+      r = check_miner_stakes(spk, vsk, ti, pos_reward);
   }
 
   //validate reward
@@ -1316,6 +1316,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 
   uint64_t funding_amount = 0;
   uint64_t miner_reward_amount = 0;
+  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
 //  cryptonote::BlockFunding fundctl;
 //  CHECK_AND_ASSERT_MES(fundctl.init(m_nettype), false, "init fundctl failed");
 //  if (fundctl.funding_enabled(height))
@@ -1581,7 +1582,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
       r = crypto::secret_key_to_public_key(vsk, pkey);
       CHECK_AND_ASSERT_MES(r, false, "failed to verify view key secret key");
       CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
-      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, height, b.timestamp, pos_reward), false, "check miner's pos failed");
+      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, pos_reward), false, "check miner's pos failed");
   }
 
   size_t txs_weight;
@@ -5143,7 +5144,7 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
   m_btc_valid = true;
 }
 
-bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, std::vector<hash> &ti, size_t height, uint64_t timestamp, uint64_t& stake_reward)
+bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, std::vector<hash> &ti, uint64_t& stake_reward)
 {
     stake_reward = 0;
 
@@ -5156,13 +5157,21 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
     hw::device &hwd = hw::get_device("default");
     for(const auto& tx: txs)
     {
-        uint64_t amount = 0;
+        uint64_t amount = 0, tx_block_height = 0, tx_block_time = 0;
         // we only need locked tx, and since tx is locked, so it's unspent, thus we don't need check double spend.
         if (is_tx_spendtime_unlocked(tx.unlock_time))
             continue;
 
         // we don't want coinbase tx
         if (is_coinbase(tx))
+            continue;
+
+        tx_block_height = m_db->get_tx_block_height(tx.hash);
+        if (!tx_block_height)
+            continue;
+
+        tx_block_time = m_db->get_block_timestamp(tx_block_height);
+        if (!tx_block_time)
             continue;
 
         const rct::rctSig& rv = tx.rct_signatures;
@@ -5217,7 +5226,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
         }
 
         // TODO: we calculate weight
-        stake_reward += cryptonote::get_pos_block_reward(tx.unlock_time, height, timestamp, amount);
+        stake_reward += cryptonote::get_pos_block_reward(tx.unlock_time, tx_block_height, tx_block_time, amount);
     }
 
     stake_reward = stake_reward > 1e12 ? 1e12 : stake_reward;

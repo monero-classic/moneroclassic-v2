@@ -331,7 +331,7 @@ namespace cryptonote {
       return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
   }
   //--------------------------------------------------------------------------------
-  uint64_t get_pos_block_reward(uint64_t unlock_time, size_t block_height, uint64_t block_time, uint64_t staked_coins)
+  uint64_t get_pos_block_reward(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins)
   {
       uint64_t reward = 0, time_proft = 0;
 
