@@ -5158,6 +5158,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
     for(const auto& tx: txs)
     {
         uint64_t amount = 0, tx_block_height = 0, tx_block_time = 0;
+
         // we only need locked tx, and since tx is locked, so it's unspent, thus we don't need check double spend.
         if (is_tx_spendtime_unlocked(tx.unlock_time))
             continue;
@@ -5225,12 +5226,14 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
             staked_coin += amount;
         }
 
-        // TODO: we calculate weight
+        // TODO: we calculate reward
         stake_reward += cryptonote::get_pos_block_reward(tx.unlock_time, tx_block_height, tx_block_time, amount);
     }
 
+    // reward has maximum limit
     stake_reward = stake_reward > 1e12 ? 1e12 : stake_reward;
 
+    // staked coin has minimum limit
     if (staked_coin < MIN_STAKE_COIN)
         stake_reward = 0;
 
