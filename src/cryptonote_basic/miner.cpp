@@ -164,7 +164,13 @@ namespace cryptonote
     uint64_t height = AUTO_VAL_INIT(height);
     uint64_t expected_reward; //only used for RPC calls - could possibly be useful here too?
 
-    // TODO: check if pos settings file changed, if changed, we read new settings, if not, we leave it
+    cryptonote::blobdata extra_nonce;
+    if(m_extra_messages.size() && m_config.current_extra_message_index < m_extra_messages.size())
+    {
+      extra_nonce = m_extra_messages[m_config.current_extra_message_index];
+    }
+
+    // check if pos settings file changed, if changed, we read new settings, if not, we leave it
     time_t  mt;
     if (epee::file_io_utils::get_file_time(m_pos_settings_file, mt))
     {
@@ -173,12 +179,6 @@ namespace cryptonote
             load_pos_settings(m_pos_settings_file);
             m_modify_time = mt;
         }
-    }
-
-    cryptonote::blobdata extra_nonce;
-    if(m_extra_messages.size() && m_config.current_extra_message_index < m_extra_messages.size())
-    {
-      extra_nonce = m_extra_messages[m_config.current_extra_message_index];
     }
 
     std::vector<char> extra_stake;
