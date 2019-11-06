@@ -5147,16 +5147,19 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
 bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, const std::vector<hash> &ti, uint64_t& stake_reward)
 {
     stake_reward = 0;
-
-    std::vector<crypto::hash> mis;
-    std::vector<transaction> txs;
-    get_transactions(ti, txs, mis);
-    CHECK_AND_ASSERT_MES(!mis.size() && txs.size(), false, "transaction provided by extra stake not found");
-
     uint64_t staked_coin = 0;
     hw::device &hwd = hw::get_device("default");
-    for(const auto& tx: txs)
+
+    for(const auto& txid: ti)
     {
+        cryptonote::blobdata db;
+        if (!m_db->get_tx_blob(txid, db))
+            continue;
+
+        transaction tx;
+        if (!parse_and_validate_tx_from_blob(db, tx))
+            continue;
+
         uint64_t amount = 0, tx_block_height = 0, tx_block_time = 0;
 
         // we only need locked tx, and since tx is locked, so it's unspent, thus we don't need check double spend.
@@ -5167,7 +5170,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
         if (is_coinbase(tx))
             continue;
 
-        tx_block_height = m_db->get_tx_block_height(tx.hash);
+        tx_block_height = m_db->get_tx_block_height(txid);
         if (!tx_block_height)
             continue;
 
