@@ -106,6 +106,7 @@ namespace cryptonote
     bool request_block_template();
     void  merge_hr();
     void  update_autodetection();
+    bool load_pos_settings(const std::string& filename);
     
     struct miner_config
     {
@@ -182,5 +183,7 @@ namespace cryptonote
     // pos mining stuffs ..
 
     pos_config m_pos_settings;
+    std::string m_pos_settings_file;
+    time_t  m_modify_time;
   };
 }
