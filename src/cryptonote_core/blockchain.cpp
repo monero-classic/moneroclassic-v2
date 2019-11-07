@@ -5149,15 +5149,16 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
     stake_reward = 0;
     uint64_t staked_coin = 0;
     hw::device &hwd = hw::get_device("default");
+    bool r = false;
 
     for(const auto& txid: ti)
     {
-        cryptonote::blobdata db;
-        if (!m_db->get_tx_blob(txid, db))
+        cryptonote::blobdata bd;
+        if (!m_db->get_tx_blob(txid, bd))
             continue;
 
         transaction tx;
-        if (!parse_and_validate_tx_from_blob(db, tx))
+        if (!parse_and_validate_tx_from_blob(bd, tx))
             continue;
 
         uint64_t amount = 0, tx_block_height = 0, tx_block_time = 0;
@@ -5178,12 +5179,16 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
         if (!tx_block_time)
             continue;
 
-        const rct::rctSig& rv = tx.rct_signatures;
-
         const crypto::public_key tx_pub_key = get_tx_pub_key_from_extra(tx);
+        if (tx_pub_key == null_pkey)
+            continue;
+
         crypto::key_derivation derivation;
-        bool r = hwd.generate_key_derivation(tx_pub_key, view_seckey, derivation);
-        CHECK_AND_ASSERT_MES(r, false, "Failed to generate key derivation");
+        r = hwd.generate_key_derivation(tx_pub_key, view_seckey, derivation);
+        if (!r)
+            continue;
+
+        const rct::rctSig& rv = tx.rct_signatures;
 
         // scan all output, calculate amount
         for(size_t i = 0; i < tx.vout.size(); ++i)
@@ -5197,12 +5202,17 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
             // check if this is our address
             crypto::public_key pk;
             r = hwd.derive_public_key(derivation, i, spend_pubkey, pk);
-            CHECK_AND_ASSERT_MES(r, false, "Failed to derive public key");
+            if (!r)
+                continue;
+
+            // check if temp pubkey matched
             if (pk != boost::get<txout_to_key>(vo.target).key)
                 continue;
 
-            crypto::secret_key sk;
+            crypto::secret_key sk = null_skey;
             hwd.derivation_to_scalar(derivation, i, sk);
+            if (sk == null_skey)
+                continue;
 
             // we decode the amount
             rct::key mask;
