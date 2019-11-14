@@ -167,7 +167,7 @@
 #define HF_VERSION_MIN_MIXIN_6                  0xee
 #define HF_VERSION_MIN_MIXIN_10                 0xee
 #define HF_VERSION_ENFORCE_RCT                  6
-#define HF_VERSION_PER_BYTE_FEE                 0xee
+#define HF_VERSION_PER_BYTE_FEE                 59
 #define HF_VERSION_SMALLER_BP                   0xee
 #define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       0xee
 
