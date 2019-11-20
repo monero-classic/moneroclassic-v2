@@ -91,8 +91,8 @@
 #define DIFFICULTY_CUT_ADJUST                           6  // timestamps to cut after sorting
 #define DIFFICULTY_BLOCKS_COUNT_ADJUST                  DIFFICULTY_WINDOW_ADJUST + DIFFICULTY_LAG_ADJUST
 #define BLOCK_FUTURE_TIME_LIMIT_ADJUST			(DIFFICULTY_WINDOW_ADJUST * DIFFICULTY_TARGET_V2 / 20)
-#define DIFFICULTY_GUESS                                20000
-#define DIFFICULTY_ADJUST_HEIGHT                        1933000
+#define DIFFICULTY_GUESS                                13000000000
+#define DIFFICULTY_ADJUST_HEIGHT                        1969000 // Thursday, Nov 7, 2019 07:00:00 AM GMT
 #define HF_VERSION_60                                   60
 #define DIFFICULTY_GUESS_TESTNET                        500
 #define DIFFICULTY_ADJUST_HEIGHT_TESTNET                3000
@@ -167,7 +167,7 @@
 #define HF_VERSION_MIN_MIXIN_6                  0xee
 #define HF_VERSION_MIN_MIXIN_10                 0xee
 #define HF_VERSION_ENFORCE_RCT                  6
-#define HF_VERSION_PER_BYTE_FEE                 0xee
+#define HF_VERSION_PER_BYTE_FEE                 59
 #define HF_VERSION_SMALLER_BP                   0xee
 #define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       0xee
 

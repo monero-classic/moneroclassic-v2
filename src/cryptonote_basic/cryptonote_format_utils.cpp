@@ -43,9 +43,11 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
-typedef boost::multiprecision::cpp_dec_float_50 xmc_float;
+typedef boost::multiprecision::number<boost::multiprecision::cpp_dec_float<64> > xmc_float;
 typedef boost::multiprecision::cpp_int xmc_int;
-static xmc_float XMC_UINT = 1000000000000.0;
+typedef boost::multiprecision::uint128_t xmc_uint_128;
+const xmc_float XMC_UINT = 1000000000000.0;
+const xmc_uint_128 XMC_INT_MAX = xmc_uint_128((uint64_t)10000000000000000000ull);
 
 using namespace epee;
 
@@ -1069,7 +1071,15 @@ namespace cryptonote
 
   double xmc_int_to_double(xmc_int amount)
   {
-      xmc_float amount_float = amount.convert_to<xmc_float>();
+      xmc_uint_128 amount_128 = amount.convert_to<xmc_uint_128>();
+      if(amount_128 < XMC_INT_MAX)
+      {
+          uint64_t int_amount = amount_128.convert_to<uint64_t>();
+          double ret = int_amount / 1000000000000.0;
+          return ret;
+      }
+
+      xmc_float amount_float = xmc_float(amount_128);
       xmc_float amount_xmc = amount_float / XMC_UINT;
       double ret = amount_xmc.convert_to<double>();
       return ret;
@@ -1077,7 +1087,6 @@ namespace cryptonote
 
   std::string print_money(xmc_int amount, unsigned int decimal_point)
   {
-    std::cout << "**** PRINT MONEY: amount:" << amount << ",amount typeid name:"<< typeid(amount).name()<< ", decimal_point:" << decimal_point << std::endl;
     if (decimal_point == (unsigned int)-1)
       decimal_point = default_decimal_point;
     std::stringstream ss;
