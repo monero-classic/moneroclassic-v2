@@ -46,15 +46,7 @@ using namespace epee;
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
 
-const static size_t   MIN_STAKE_HEIGHT = 2160;  // minimum stake height, 3 day
-const static uint64_t MIN_STAKE_TIMESTAMP = 3  * 24 * 60 * 60;  // minimum stake time, 3 day
-
-// for timestamp map, we can multiple 60 * 2 for STAKE_HEIGHT_PROFIT's first
-const static std::map<uint64_t, uint64_t> STAKE_HEIGHT_PROFIT = {
-    {3  * 24 * 60 / 2, 1},     // 3 day
-    {6  * 24 * 60 / 2, 3},     // 6 day
-    {12 * 24 * 60 / 2, 10},    // 12 day
-};
+#define MONERO_STAKE_MIN_HEIGHT 500 // about 16 hours
 
 namespace cryptonote {
 
@@ -331,48 +323,38 @@ namespace cryptonote {
       return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
   }
   //--------------------------------------------------------------------------------
-  uint64_t get_pos_block_reward(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins)
+  double get_pos_block_reward_rate(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins)
   {
-      uint64_t reward = 0, time_proft = 0;
+      double reward_rate = 0.0;
 
-      auto cal_tp = [&](uint64_t t, bool is_height) {
-          uint64_t tp = 0;
-          for (auto i = STAKE_HEIGHT_PROFIT.rbegin(); i != STAKE_HEIGHT_PROFIT.rend(); ++i ) {
-              if (t / (i->first * (is_height ? 1 : 2 * 60))) {
-                  tp = i->second;
-                  break;
-              }
-          }
-          return tp;
-      };
+      const uint64_t FULL_STAKE_TIME_HEIGHT = 12 * 30 * 24 * 30; // for one year block height
+      const uint64_t FULL_STAKE_AMOUNT = 300000 * COIN; // 300'000 XMC
 
-      if (unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER)
+      do
       {
-          // treat unlock_time as height
-          if (unlock_time < block_height)
-              return reward;
+          uint64_t delta_height = 0;
+          if (unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER){
+              if (unlock_time < block_height)
+                  break;
 
-          uint64_t delta_height = unlock_time - block_height;
-          if (delta_height < MIN_STAKE_HEIGHT)
-              return reward;
+              delta_height = unlock_time - block_height;
+          } else {
+              if (unlock_time < block_time)
+                  break;
 
-          time_proft = cal_tp(delta_height, true);
-      } else {
-          // treat unlock_time as timestamp
-          if (unlock_time < block_time)
-              return reward;
+              delta_height = (unlock_time - block_time) / DIFFICULTY_TARGET_V2;
+          }
 
-          uint64_t delta_ts = unlock_time - block_time;
-          if (delta_ts < MIN_STAKE_TIMESTAMP)
-              return reward;
+          if (delta_height < MONERO_STAKE_MIN_HEIGHT)
+              break;
 
-          time_proft = cal_tp(delta_ts, false);
-      }
+          // This could make uint64_t overflow
+          //reward_rate = 1.0 * (staked_coins * delta_height * delta_height) / (FULL_STAKE_AMOUNT * FULL_STAKE_TIME_HEIGHT * FULL_STAKE_TIME_HEIGHT);
+          reward_rate = 1.0 * staked_coins / FULL_STAKE_AMOUNT * delta_height / FULL_STAKE_TIME_HEIGHT * delta_height / FULL_STAKE_TIME_HEIGHT;
 
-      // TODO: need more..
-      reward = staked_coins * time_proft / 100000;
+      }while (0);
 
-      return reward;
+      return reward_rate;
   }
   //--------------------------------------------------------------------------------
 }

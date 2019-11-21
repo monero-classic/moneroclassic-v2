@@ -77,7 +77,7 @@ namespace cryptonote
   }
   //---------------------------------------------------------------
 //  bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version) {
-    bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx,  const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, network_type nettype, const std::vector<char> &extra_stake, uint64_t pos_reward) {
+    bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx,  const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, network_type nettype, const std::vector<char> &extra_stake, double pos_reward_rate) {
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
@@ -125,13 +125,14 @@ namespace cryptonote
     bool enable_fund = fundctl.funding_enabled(height);
     uint64_t miner_reward = 0;
     uint64_t fund_reward = 0;
+    uint64_t pos_reward = 0;
     if (enable_fund)
     {
       uint64_t adjust_height = nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
       bool fork = height >= adjust_height;
-      fundctl.fund_from_block(block_reward, miner_reward, fund_reward, fork);
+      fundctl.fund_from_block(block_reward, miner_reward, fund_reward, pos_reward, pos_reward_rate, fork);
       block_reward = miner_reward;
-      MERROR("construct_miner_tx,block_reward=" << block_reward <<",fund_reward=" << fund_reward << ",height=" << height);
+      MINFO("construct_miner_tx,block_reward=" << block_reward << ",pos_reward=" << pos_reward << ",fund_reward=" << fund_reward << ",height=" << height);
     }
 
     block_reward += pos_reward;
