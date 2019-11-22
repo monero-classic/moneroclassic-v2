@@ -183,6 +183,7 @@
 #define CRYPTONOTE_PRUNING_LOG_STRIPES          3 // the higher, the more space saved
 #define CRYPTONOTE_PRUNING_TIP_BLOCKS           5500 // the smaller, the more space saved
 //#define CRYPTONOTE_PRUNING_DEBUG_SPOOF_SEED
+#define MONERO_STAKE_MIN_HEIGHT                 500 // least stake block height, about 16 hours
 
 // New constants are intended to go here
 namespace config

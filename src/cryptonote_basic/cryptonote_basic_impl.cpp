@@ -46,8 +46,6 @@ using namespace epee;
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
 
-#define MONERO_STAKE_MIN_HEIGHT 500 // about 16 hours
-
 namespace cryptonote {
 
   struct integrated_address {
