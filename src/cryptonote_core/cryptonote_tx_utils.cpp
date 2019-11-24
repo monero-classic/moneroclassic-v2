@@ -106,6 +106,8 @@ namespace cryptonote
       return false;
     }
 
+    uint64_t std_reward = block_reward;
+
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
     LOG_PRINT_L1("Creating block template: reward " << block_reward <<
       ", fee " << fee);
@@ -130,9 +132,9 @@ namespace cryptonote
     {
       uint64_t adjust_height = nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
       bool fork = height >= adjust_height;
-      fundctl.fund_from_block(block_reward, miner_reward, fund_reward, pos_reward, pos_reward_rate, fork);
-      block_reward = miner_reward;
-      MINFO("construct_miner_tx,block_reward=" << block_reward << ",pos_reward=" << pos_reward << ",fund_reward=" << fund_reward << ",height=" << height);
+      fundctl.fund_from_block(std_reward, miner_reward, fund_reward, pos_reward, pos_reward_rate, fork);
+      block_reward = miner_reward + fee;
+      MINFO("construct_miner_tx,block_reward=" << block_reward << ",pos_reward=" << pos_reward <<",fund_reward=" << fund_reward << ",height=" << height);
     }
 
     block_reward += pos_reward;

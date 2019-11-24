@@ -1253,6 +1253,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 
+  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
   double pos_reward_rate = 0.0;
   crypto::public_key spk = AUTO_VAL_INIT(spk);
   crypto::secret_key vsk = AUTO_VAL_INIT(vsk);
@@ -1284,7 +1285,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
       r = crypto::secret_key_to_public_key(vsk, vpk);
       CHECK_AND_ASSERT_MES(r, false, "illegal view secret key in stake extra");
 
-      r = check_miner_stakes(spk, vsk, ti, pos_reward_rate);
+      r = check_miner_stakes(spk, vsk, ti, height, pos_reward_rate);
   }
 
   //validate reward
@@ -1309,7 +1310,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 
   uint64_t funding_amount = 0;
   uint64_t miner_reward_amount = 0;
-  uint64_t height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
+
 //  cryptonote::BlockFunding fundctl;
 //  CHECK_AND_ASSERT_MES(fundctl.init(m_nettype), false, "init fundctl failed");
 //  if (fundctl.funding_enabled(height))
@@ -1332,6 +1333,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   }
 
   uint64_t std_reward = base_reward;
+
   if(base_reward + fee < money_in_use)
   {
     MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
@@ -1363,8 +1365,10 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 //    bool ret = fundctl.check_block_funding(miner_reward_amount, funding_amount, base_reward + fee);
     uint64_t adjust_height = m_nettype == TESTNET ? DIFFICULTY_ADJUST_HEIGHT_TESTNET : DIFFICULTY_ADJUST_HEIGHT;
     bool fork = height >= adjust_height;
-    bool ret = m_fundctl.check_block_funding(miner_reward_amount, funding_amount, std_reward, pos_reward_rate, fork);
-    MINFO("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee));
+
+    bool ret = m_fundctl.check_block_funding(miner_reward_amount - fee, funding_amount, std_reward, pos_reward_rate, fork);
+    MINFO("miner_reward_amount=" << miner_reward_amount << ", funding_amount=" << funding_amount << ", money_in_use=" << (base_reward + fee)
+          << ", base_rewad=" << base_reward << ", fee=" << fee);
     CHECK_AND_ASSERT_MES(ret, false, "check reward failed");
   }
   return true;
@@ -1576,7 +1580,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
       r = crypto::secret_key_to_public_key(vsk, pkey);
       CHECK_AND_ASSERT_MES(r, false, "failed to verify view key secret key");
       CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
-      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, pos_reward_rate), false, "check miner's pos failed");
+      CHECK_AND_ASSERT_MES(check_miner_stakes(spk, vsk, ti, height, pos_reward_rate), false, "check miner's pos failed");
   }
 
   size_t txs_weight;
@@ -5140,7 +5144,7 @@ void Blockchain::cache_block_template(const block &b, const cryptonote::account_
   m_btc_valid = true;
 }
 
-bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, const std::vector<hash> &ti, double &stake_reward_rate)
+bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto::secret_key& view_seckey, const std::vector<hash> &ti, uint64_t height, double &stake_reward_rate)
 {
     stake_reward_rate = 0.0;
     hw::device &hwd = hw::get_device("default");
@@ -5233,7 +5237,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
         }
 
         // we calculate reward rate
-        stake_reward_rate += cryptonote::get_pos_block_reward_rate(tx.unlock_time, tx_block_height, tx_block_time, amount);
+        stake_reward_rate += cryptonote::get_pos_block_reward_rate(tx.unlock_time, tx_block_height, tx_block_time, amount, height);
     }
 
     // reward has maximum limit

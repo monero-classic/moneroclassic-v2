@@ -46,6 +46,26 @@ using namespace epee;
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn"
 
+#define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
+
+const uint64_t BLOCK_PER_YEAR = 259200;
+
+const uint64_t FULL_STAKE_COINS_OVER_YEAR[13] = {
+    300000 * COIN,
+    600000 * COIN,
+    900000 * COIN,
+    1350000 * COIN,             // 1.5
+    2025000 * COIN,             // 1.5
+    2632500 * COIN,             // 1.3
+    3422250 * COIN,             // 1.3
+    4448925 * COIN,             // 1.3
+    5338710 * COIN,             // 1.2
+    6406452 * COIN,             // 1.2
+    76877424 * COIN / 10,       // 1.2
+    922529088 * COIN / 100,     // 1.2
+    10000000 * COIN, //11070349056 * COIN / 1000,  // 1.2, XNC_INT_MAX is 10000000 * COIN, so this will hardly happen
+};
+
 namespace cryptonote {
 
   struct integrated_address {
@@ -321,12 +341,21 @@ namespace cryptonote {
       return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
   }
   //--------------------------------------------------------------------------------
-  double get_pos_block_reward_rate(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins)
+  double get_pos_block_reward_rate(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins, uint64_t cur_height)
   {
       double reward_rate = 0.0;
 
+      if (cur_height < STAKE_START_HEIGHT)
+          return reward_rate;
+
+      uint64_t full_stake_coins = 300000 * COIN;   // 300'000 XMC
+      uint64_t elapse_index = (cur_height - STAKE_START_HEIGHT) / BLOCK_PER_YEAR;
+      if (elapse_index >= ARRAY_SIZE(FULL_STAKE_COINS_OVER_YEAR))
+          full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[ARRAY_SIZE(FULL_STAKE_COINS_OVER_YEAR) - 1];
+      else
+          full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[elapse_index];
+
       const uint64_t FULL_STAKE_TIME_HEIGHT = 12 * 30 * 24 * 30; // for one year block height
-      const uint64_t FULL_STAKE_AMOUNT = 300000 * COIN; // 300'000 XMC
 
       do
       {
@@ -348,7 +377,7 @@ namespace cryptonote {
 
           // This could make uint64_t overflow
           //reward_rate = 1.0 * (staked_coins * delta_height * delta_height) / (FULL_STAKE_AMOUNT * FULL_STAKE_TIME_HEIGHT * FULL_STAKE_TIME_HEIGHT);
-          reward_rate = 1.0 * staked_coins / FULL_STAKE_AMOUNT * delta_height / FULL_STAKE_TIME_HEIGHT * delta_height / FULL_STAKE_TIME_HEIGHT;
+          reward_rate = 1.0 * staked_coins / full_stake_coins * delta_height / FULL_STAKE_TIME_HEIGHT * delta_height / FULL_STAKE_TIME_HEIGHT;
 
       }while (0);
 
