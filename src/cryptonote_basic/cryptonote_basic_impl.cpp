@@ -345,6 +345,7 @@ namespace cryptonote {
   {
       double reward_rate = 0.0;
 
+      // at least staked 1 XMC
       staked_coins /= COIN;
       if (!staked_coins)
           return reward_rate;
@@ -361,7 +362,7 @@ namespace cryptonote {
       else
           full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[elapse_index];
 
-      const uint64_t FULL_STAKE_TIME_HEIGHT = 12 * 30 * 24 * 30; // one year block height
+      const uint64_t FULL_STAKE_TIME_DAYS = 12 * 30; // one year
 
       do
       {
@@ -378,12 +379,14 @@ namespace cryptonote {
               delta_height = (unlock_time - block_time) / DIFFICULTY_TARGET_V2;
           }
 
-          if (delta_height < MONERO_STAKE_MIN_HEIGHT)
+          // at least staked one day
+          uint64_t delta_days = delta_height / MONERO_BLOCK_PER_DAY;
+          if (!delta_days)
               break;
 
           // This could make uint64_t overflow
-          //reward_rate = 1.0 * (staked_coins * delta_height * delta_height) / (FULL_STAKE_AMOUNT * FULL_STAKE_TIME_HEIGHT * FULL_STAKE_TIME_HEIGHT);
-          reward_rate = 1.0 * staked_coins / full_stake_coins * delta_height / FULL_STAKE_TIME_HEIGHT * delta_height / FULL_STAKE_TIME_HEIGHT;
+          //reward_rate = 1.0 * (staked_coins * delta_days * delta_days) / (full_stake_coins * FULL_STAKE_TIME_DAYS * FULL_STAKE_TIME_DAYS);
+          reward_rate = 1.0 * staked_coins / full_stake_coins * delta_days / FULL_STAKE_TIME_DAYS * delta_days / FULL_STAKE_TIME_DAYS;
 
       }while (0);
 
