@@ -5237,7 +5237,7 @@ bool Blockchain::check_miner_stakes(const public_key &spend_pubkey, const crypto
         }
 
         // we calculate reward rate
-        stake_reward_rate += cryptonote::get_pos_block_reward_rate(tx.unlock_time, tx_block_height, tx_block_time, amount, height);
+        stake_reward_rate += cryptonote::get_pos_block_reward_rate(tx.unlock_time, tx_block_height, tx_block_time, amount, height, m_nettype);
     }
 
     // reward has maximum limit

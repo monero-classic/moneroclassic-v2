@@ -341,15 +341,17 @@ namespace cryptonote {
       return cryptonote::get_block_hash(a) == cryptonote::get_block_hash(b);
   }
   //--------------------------------------------------------------------------------
-  double get_pos_block_reward_rate(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins, uint64_t cur_height)
+  double get_pos_block_reward_rate(uint64_t unlock_time, uint64_t block_height, uint64_t block_time, uint64_t staked_coins, uint64_t cur_height, network_type type)
   {
       double reward_rate = 0.0;
 
-      if (cur_height < STAKE_START_HEIGHT)
+      uint64_t start_height = (type == network_type::TESTNET ? STAKE_STATR_HEIGHT_TESTNET : STAKE_START_HEIGHT);
+
+      if (cur_height < start_height)
           return reward_rate;
 
       uint64_t full_stake_coins = 300000 * COIN;   // 300'000 XMC
-      uint64_t elapse_index = (cur_height - STAKE_START_HEIGHT) / BLOCK_PER_YEAR;
+      uint64_t elapse_index = (cur_height - start_height) / BLOCK_PER_YEAR;
       if (elapse_index >= ARRAY_SIZE(FULL_STAKE_COINS_OVER_YEAR))
           full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[ARRAY_SIZE(FULL_STAKE_COINS_OVER_YEAR) - 1];
       else

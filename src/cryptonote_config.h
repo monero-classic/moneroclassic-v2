@@ -102,6 +102,7 @@
 #define CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS       1
 
 #define STAKE_START_HEIGHT                              1990600 // Dec 7, 2019
+#define STAKE_STATR_HEIGHT_TESTNET                      4000
 
 
 #define DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN             DIFFICULTY_TARGET_V1 //just alias; used by tests
