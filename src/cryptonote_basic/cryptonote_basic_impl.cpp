@@ -51,19 +51,19 @@ using namespace epee;
 const uint64_t BLOCK_PER_YEAR = 259200;
 
 const uint64_t FULL_STAKE_COINS_OVER_YEAR[13] = {
-    300000 * COIN,
-    600000 * COIN,
-    900000 * COIN,
-    1350000 * COIN,             // 1.5
-    2025000 * COIN,             // 1.5
-    2632500 * COIN,             // 1.3
-    3422250 * COIN,             // 1.3
-    4448925 * COIN,             // 1.3
-    5338710 * COIN,             // 1.2
-    6406452 * COIN,             // 1.2
-    76877424 * COIN / 10,       // 1.2
-    922529088 * COIN / 100,     // 1.2
-    10000000 * COIN, //11070349056 * COIN / 1000,  // 1.2, XNC_INT_MAX is 10000000 * COIN, so this will hardly happen
+    300000,
+    600000,
+    900000,
+    1350000,             // 1.5
+    2025000,             // 1.5
+    2632500,             // 1.3
+    3422250,             // 1.3
+    4448925,             // 1.3
+    5338710,             // 1.2
+    6406452,             // 1.2
+    7687742,             // 1.2
+    9225290,             // 1.2
+    10000000,            // 1.2, XNC_INT_MAX is 10000000 * COIN, so this will hardly happen
 };
 
 namespace cryptonote {
@@ -345,19 +345,23 @@ namespace cryptonote {
   {
       double reward_rate = 0.0;
 
+      staked_coins /= COIN;
+      if (!staked_coins)
+          return reward_rate;
+
       uint64_t start_height = (type == network_type::TESTNET ? STAKE_STATR_HEIGHT_TESTNET : STAKE_START_HEIGHT);
 
       if (cur_height < start_height)
           return reward_rate;
 
-      uint64_t full_stake_coins = 300000 * COIN;   // 300'000 XMC
+      uint64_t full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[0];   // 300'000 XMC
       uint64_t elapse_index = (cur_height - start_height) / BLOCK_PER_YEAR;
       if (elapse_index >= ARRAY_SIZE(FULL_STAKE_COINS_OVER_YEAR))
           full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[ARRAY_SIZE(FULL_STAKE_COINS_OVER_YEAR) - 1];
       else
           full_stake_coins = FULL_STAKE_COINS_OVER_YEAR[elapse_index];
 
-      const uint64_t FULL_STAKE_TIME_HEIGHT = 12 * 30 * 24 * 30; // for one year block height
+      const uint64_t FULL_STAKE_TIME_HEIGHT = 12 * 30 * 24 * 30; // one year block height
 
       do
       {
