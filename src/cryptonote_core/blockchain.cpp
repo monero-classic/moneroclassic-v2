@@ -154,8 +154,6 @@ static const struct {
   { 6, 36000, 0, 1521480000 },
 };
 
-const static uint64_t MIN_STAKE_COIN = 10000e12; // 10'000 XMC
-
 //------------------------------------------------------------------
 Blockchain::Blockchain(tx_memory_pool& tx_pool) :
   m_db(), m_tx_pool(tx_pool), m_hardfork(NULL), m_timestamps_and_difficulties_height(0), m_current_block_cumul_weight_limit(0), m_current_block_cumul_weight_median(0),
