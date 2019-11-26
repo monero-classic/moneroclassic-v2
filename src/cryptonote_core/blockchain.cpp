@@ -1574,7 +1574,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
       CHECK_AND_ASSERT_MES(r, false, "failed to parse tx extra stake");
       CHECK_AND_ASSERT_MES(spk == miner_address.m_spend_public_key, false, "failed to construct stake extra spend pub key");
 
-      crypto::public_key pkey;
+      crypto::public_key pkey = AUTO_VAL_INIT(pkey);
       r = crypto::secret_key_to_public_key(vsk, pkey);
       CHECK_AND_ASSERT_MES(r, false, "failed to verify view key secret key");
       CHECK_AND_ASSERT_MES(pkey == miner_address.m_view_public_key, false, "view secret key does not match mine address");
