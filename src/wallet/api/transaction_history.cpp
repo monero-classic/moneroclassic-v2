@@ -40,6 +40,8 @@
 #include <string>
 #include <list>
 
+#define MONERO_STAKE_MIN_HEIGHT 720
+
 using namespace epee;
 
 namespace Monero {
