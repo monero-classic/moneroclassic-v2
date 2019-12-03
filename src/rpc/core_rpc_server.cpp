@@ -1248,7 +1248,7 @@ namespace cryptonote
     block b;
     cryptonote::blobdata blob_reserve;
     blob_reserve.resize(req.reserve_size, 0);
-    std::vector<char> ex_stake(sizeof(crypto::secret_key) + sizeof(crypto::hash), 0);
+    std::vector<char> ex_stake;
     cryptonote::difficulty_type wdiff;
     crypto::hash prev_block;
     if (!req.prev_block.empty())
