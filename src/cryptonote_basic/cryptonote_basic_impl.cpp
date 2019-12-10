@@ -379,6 +379,9 @@ namespace cryptonote {
               delta_height = (unlock_time - block_time) / DIFFICULTY_TARGET_V2;
           }
 
+          if (delta_height > BLOCK_PER_YEAR)
+              delta_height = BLOCK_PER_YEAR;
+
           // at least staked one day
           uint64_t delta_days = delta_height / MONERO_BLOCK_PER_DAY;
           if (!delta_days)
