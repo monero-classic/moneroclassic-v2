@@ -113,6 +113,12 @@ namespace cryptonote {
       return true;
     }
 
+    // 2020-07-01
+    if (already_generated_coins && version == 1) { // from height 1 to 10, 10 blocks
+        reward = 1000 * COIN;
+        return true;
+    }
+
     uint64_t base_reward = (MONEY_SUPPLY - already_generated_coins) >> emission_speed_factor;
     if (base_reward < FINAL_SUBSIDY_PER_MINUTE*target_minutes)
     {
