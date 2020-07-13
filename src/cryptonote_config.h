@@ -91,7 +91,7 @@
 #define DIFFICULTY_CUT_ADJUST                           6  // timestamps to cut after sorting
 #define DIFFICULTY_BLOCKS_COUNT_ADJUST                  DIFFICULTY_WINDOW_ADJUST + DIFFICULTY_LAG_ADJUST
 #define BLOCK_FUTURE_TIME_LIMIT_ADJUST			(DIFFICULTY_WINDOW_ADJUST * DIFFICULTY_TARGET_V2 / 20)
-#define DIFFICULTY_GUESS                                13000000000
+#define DIFFICULTY_GUESS                                60
 #define DIFFICULTY_ADJUST_HEIGHT                        60 // Thursday, Nov 7, 2019 07:00:00 AM GMT
 #define HF_VERSION_60                                   60
 #define DIFFICULTY_GUESS_TESTNET                        500
