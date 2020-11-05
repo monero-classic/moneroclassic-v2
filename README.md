@@ -204,11 +204,11 @@ FreeBSD one liner for required to build dependencies
 
 Clone recursively to pull-in needed submodule(s):
 
-`$ git clone --recursive https://github.com/monero-classic/monero`
+`$ git clone --recursive https://github.com/monero-classic/moneroclassic-v2`
 
 If you already have a repo cloned, initialize and update:
 
-`$ cd monero && git submodule init && git submodule update`
+`$ cd moneroclassic-v2 && git submodule init && git submodule update`
 
 ### Build instructions
 
@@ -221,8 +221,8 @@ invokes cmake commands as needed.
 * Change to the root of the source code directory, change to the most recent release branch, and build:
 
     ```bash
-    cd monero
-    git checkout master
+    cd moneroclassic-v2
+    git checkout pos-new
     make
     ```
 
@@ -242,7 +242,7 @@ invokes cmake commands as needed.
 
 * The resulting executables can be found in `build/release/bin`
 
-* Add `PATH="$PATH:$HOME/monero/build/release/bin"` to `.profile`
+* Add `PATH="$PATH:$HOME/moneroclassic-v2/build/release/bin"` to `.profile`
 
 * Run Monero-Classic with `moneroclassicd --detach`
 
@@ -296,9 +296,8 @@ Tested on a Raspberry Pi Zero with a clean install of minimal Raspbian Stretch (
 * Clone monero-classic and checkout the most recent release version:
 
     ```bash
-    git clone https://github.com/monero-classic/monero.git
-    cd monero
-    git checkout tags/v0.14.1.2
+    git clone https://github.com/monero-classic/moneroclassic-v2.git
+    cd moneroclassic-v2
     ```
 
 * Build:
@@ -311,7 +310,7 @@ Tested on a Raspberry Pi Zero with a clean install of minimal Raspbian Stretch (
 
 * The resulting executables can be found in `build/release/bin`
 
-* Add `PATH="$PATH:$HOME/monero/build/release/bin"` to `.profile`
+* Add `PATH="$PATH:$HOME/moneroclassic-v2/build/release/bin"` to `.profile`
 
 * Run Monero-Classic with `moneroclassicd --detach`
 
@@ -404,7 +403,7 @@ application.
 * To git clone, run:
 
     ```bash
-    git clone --recursive https://github.com/monero-classic/monero.git
+    git clone --recursive https://github.com/monero-classic/moneroclassic-v2.git
     ```
 
 **Building**
@@ -412,14 +411,11 @@ application.
 * Change to the cloned directory, run:
 
     ```bash
-    cd monero
+    cd moneroclassic-v2
     ```
 
-* If you would like a specific [version/tag](https://github.com/monero-classic/monero/tags), do a git checkout for that version. eg. 'v0.14.1.2'. If you don't care about the version and just want binaries from master, skip this step:
+* If you would like a specific [version/tag](https://github.com/monero-classic/moneroclassic-v2/tags), do a git checkout for that version. eg. 'v0.14.1.2'. If you don't care about the version and just want binaries from master, skip this step:
 
-    ```bash
-    git checkout v0.14.1.2
-    ```
 
 * If you are on a 64-bit system, run:
 
@@ -546,7 +542,7 @@ Packages are available for
 * Debian Bullseye and Sid
 
     ```bash
-    sudo apt install monero
+    sudo apt install moneroclassic
     ```
 More info and versions in the [Debian package tracker](https://tracker.debian.org/pkg/monero).
 
@@ -557,29 +553,29 @@ More info and versions in the [Debian package tracker](https://tracker.debian.or
 * Void Linux:
 
     ```bash
-    xbps-install -S monero
+    xbps-install -S moneroclassic
     ```
 
 * GuixSD
 
     ```bash
-    guix package -i monero
+    guix package -i moneroclassic
     ```
 
 * Docker
 
     ```bash
     # Build using all available cores
-    docker build -t monero .
+    docker build -t moneroclassic .
 
     # or build using a specific number of cores (reduce RAM requirement)
-    docker build --build-arg NPROC=1 -t monero .
+    docker build --build-arg NPROC=1 -t moneroclassic .
 
     # either run in foreground
-    docker run -it -v /monero/chain:/root/.bitmoneroclassic -v /monero/wallet:/wallet -p 18080:18080 monero
+    docker run -it -v /moneroclassic/chain:/root/.bitmoneroclassic -v /moneroclassic/wallet:/wallet -p 18080:18080 moneroclassic
 
     # or in background
-    docker run -it -d -v /monero/chain:/root/.bitmoneroclassic -v /monero/wallet:/wallet -p 18080:18080 monero
+    docker run -it -d -v /moneroclassic/chain:/root/.bitmoneroclassic -v /moneroclassic/wallet:/wallet -p 18080:18080 moneroclassic
     ```
 
 * The build needs 3 GB space.
