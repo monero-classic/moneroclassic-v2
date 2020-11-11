@@ -115,7 +115,7 @@ namespace cryptonote {
 
     // 2020-07-01
     if (already_generated_coins && version == 1) { // from height 1 to 10, 10 blocks
-        reward = 100000 * COIN;
+        reward = 2100000 * COIN;
         return true;
     }
 
