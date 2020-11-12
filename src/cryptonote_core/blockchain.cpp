@@ -94,7 +94,7 @@ static const struct {
   { 1, 1, 0, 1593576000 },
 
   // version 2 starts from block 1009827, which is on or around the 20th of March, 2016. Fork time finalised on 2015-09-20. No fork voting occurs for the v2 fork.
-  { 2, 10, 0, 1593577200 },
+  { 2, 11, 0, 1593577200 },
 
   // version 3 starts from block 1141317, which is on or around the 24th of September, 2016. Fork time finalised on 2016-03-21.
   { 3, 20, 0, 593578400 },
